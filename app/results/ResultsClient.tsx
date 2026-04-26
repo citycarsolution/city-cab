@@ -53,7 +53,10 @@ export default function ResultsClient() {
     const msg = `Booking Request
 Name: ${name}
 Phone: ${phone}
-Car: ${selectedCar.name}`;
+Pickup: ${pickup}
+Drop: ${drop}
+Car: ${selectedCar.name}
+Price: ₹${selectedCar.price}`;
 
     window.open(
       `https://wa.me/919082552031?text=${encodeURIComponent(msg)}`
@@ -61,38 +64,80 @@ Car: ${selectedCar.name}`;
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 p-4 pb-20">
+    <main className="min-h-screen bg-gray-100 p-4 pb-24">
 
-      <button onClick={() => router.back()} className="text-pink-500 mb-4">
+      {/* BACK */}
+      <button
+        onClick={() => router.back()}
+        className="text-pink-500 mb-4 font-semibold"
+      >
         ← Back
       </button>
 
-      <div className="bg-white p-4 rounded mb-4">
+      {/* TRIP INFO */}
+      <div className="bg-white p-4 rounded-xl shadow mb-4 text-sm">
         <p><b>Pickup:</b> {pickup}</p>
         <p><b>Drop:</b> {drop}</p>
         <p><b>Date:</b> {date}</p>
         <p><b>Time:</b> {time}</p>
       </div>
 
+      {/* CAR LIST */}
       {cars.map((car, i) => (
-        <div key={i} className="bg-white p-4 rounded mb-4 shadow">
+        <div key={i} className="bg-white p-4 rounded-xl shadow mb-4">
 
-          <div className="flex gap-3 items-center">
-            <img src={car.img} className="w-24 h-16 rounded" />
+          <div className="flex gap-3">
+
+            <img
+              src={car.img}
+              className="w-24 h-16 object-cover rounded-lg"
+            />
 
             <div className="flex-1">
-              <h3 className="font-bold">{car.name}</h3>
-              <p className="text-xs">150 KM Included</p>
+
+              <div className="flex justify-between items-center">
+                <h3 className="font-bold text-lg">{car.name}</h3>
+
+                <span className="text-pink-500 font-bold text-lg">
+                  ₹ {car.price}
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-500 mb-1">
+                {car.seats} Seats • AC
+              </p>
+
+              {/* CONDITIONS */}
+              <div className="text-xs space-y-1 mt-2">
+
+                {isAirport ? (
+                  <>
+                    <p>✔ 4 Hours / 40 KM Included</p>
+                    <p>✔ Driver Allowance Included</p>
+                    <p>✔ AC Car</p>
+                    <p className="text-red-500">✘ Toll & Parking Extra</p>
+                    <p className="text-red-500">✘ Extra ₹{car.extraKm}/km after limit</p>
+                  </>
+                ) : (
+                  <>
+                    <p>✔ 150 KM Included</p>
+                    <p>✔ Driver Allowance Included</p>
+                    <p>✔ AC Car</p>
+                    <p className="text-red-500">✘ Toll & Parking Extra</p>
+                    <p className="text-red-500">✘ Extra ₹{car.extraKm}/km after limit</p>
+                  </>
+                )}
+
+              </div>
+
             </div>
 
-            <div className="text-pink-500 font-bold">
-              ₹ {car.price}
-            </div>
           </div>
 
+          {/* BUTTON */}
           <button
             onClick={() => setSelectedCar(car)}
-            className="w-full mt-2 bg-pink-500 text-white py-2 rounded"
+            className="w-full mt-4 bg-pink-500 text-white py-3 rounded-lg font-semibold"
           >
             Book Now
           </button>
@@ -100,34 +145,46 @@ Car: ${selectedCar.name}`;
         </div>
       ))}
 
+      {/* BOOKING MODAL */}
       {selectedCar && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/60 flex items-end md:items-center justify-center z-50">
 
-          <div className="bg-white p-4 rounded w-full max-w-sm">
+          <div className="bg-white w-full md:max-w-sm p-5 rounded-t-xl md:rounded-xl">
+
+            <h3 className="font-bold text-lg mb-3">
+              Book {selectedCar.name}
+            </h3>
 
             <input
-              placeholder="Name"
+              placeholder="Your Name"
               onChange={(e) => setName(e.target.value)}
-              className="w-full mb-2 p-2 border"
+              className="w-full mb-2 p-3 border rounded-lg"
             />
 
             <input
-              placeholder="Phone"
+              placeholder="Phone Number"
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full mb-2 p-2 border"
+              className="w-full mb-2 p-3 border rounded-lg"
             />
 
             <textarea
-              placeholder="Address"
+              placeholder="Pickup Address"
               onChange={(e) => setAddress(e.target.value)}
-              className="w-full mb-2 p-2 border"
+              className="w-full mb-3 p-3 border rounded-lg"
             />
 
             <button
               onClick={handleBooking}
-              className="w-full bg-pink-500 text-white py-2"
+              className="w-full bg-pink-500 text-white py-3 rounded-lg font-semibold"
             >
-              Confirm
+              Confirm Booking
+            </button>
+
+            <button
+              onClick={() => setSelectedCar(null)}
+              className="w-full mt-2 text-gray-500"
+            >
+              Cancel
             </button>
 
           </div>

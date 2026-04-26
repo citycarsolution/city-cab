@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
+/* ROOT COLORS */
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* DARK MODE (optional safe) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff; /* force light for better UI */
+    --foreground: #171717;
   }
 }
 
+/* BASE BODY */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+
+  /* 🔥 IMPORTANT FIX */
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* 🔥 GLOBAL BLUR FIX (MOBILE ISSUE SOLVED) */
+* {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* INPUT STYLING */
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #ec4899; /* pink */
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+}
+
+/* BUTTON SMOOTH */
+button {
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* IMAGE SHARP */
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* REMOVE ANY RANDOM FADE */
+section,
+div {
+  opacity: 1 !important;
+}
+
+/* MOBILE SAFE FIX */
+html, body {
+  overflow-x: hidden;
 }

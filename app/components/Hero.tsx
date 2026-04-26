@@ -29,7 +29,7 @@ export default function Hero() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
-  // 🔥 AUTO SLIDE
+  // AUTO SLIDE
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((i) => (i + 1) % services.length);
@@ -37,7 +37,7 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 AUTO DATE + TIME (+1 HOUR)
+  // AUTO DATE + TIME
   useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
@@ -49,7 +49,7 @@ export default function Hero() {
     setDrop("Mumbai Airport T1 / T2");
   }, []);
 
-  // 🔥 SWITCH AUTO
+  // SWITCH DROP
   useEffect(() => {
     if (services[index].type === "airport") {
       setDrop("Mumbai Airport T1 / T2");
@@ -65,33 +65,33 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative h-[85vh] md:h-screen flex items-end md:items-center">
+    <section className="relative isolate h-[85vh] md:h-screen flex items-end md:items-center overflow-hidden">
 
-      {/* BG */}
+      {/* BACKGROUND */}
       <div
-        className="absolute inset-0 bg-cover bg-center transition-all duration-700"
+        className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${services[index].bg})` }}
       />
 
-      {/* OVERLAY */}
-      <div className="absolute inset-0 bg-black/60" />
+      {/* DARK OVERLAY (SAFE) */}
+      <div className="absolute inset-0 bg-black/50 pointer-events-none" />
 
+      {/* CONTENT */}
       <div className="relative z-10 w-full px-4 md:max-w-6xl mx-auto">
 
-        {/* 🔥 LEFT CONTENT */}
-        <div className="text-white mb-4 md:mb-0">
+        {/* TEXT */}
+        <div className="text-white mb-4">
 
           <h1 className="text-2xl md:text-5xl font-bold leading-tight">
             {services[index].title}
           </h1>
 
-          {/* 🔥 CAR NAME */}
           <p className="text-sm md:text-lg text-pink-400 font-semibold mt-1">
             {services[index].car}
           </p>
 
-          {/* 🔥 PRICE BOX */}
-          <div className="mt-3 inline-block bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
+          {/* PRICE FIX (NO BLUR) */}
+          <div className="mt-3 inline-block bg-black/40 px-4 py-2 rounded-lg">
 
             <p className="text-xs text-gray-300">
               Starting From
@@ -105,14 +105,13 @@ export default function Hero() {
 
         </div>
 
-        {/* 🔥 FORM */}
+        {/* FORM */}
         <div className="bg-white rounded-xl p-4 shadow-xl w-full md:max-w-sm mt-4 md:mt-6">
 
           <h2 className="font-semibold text-base mb-3">
             Quick Booking
           </h2>
 
-          {/* SWITCH */}
           <div className="flex gap-2 mb-3">
             <button
               onClick={() => setIndex(1)}
@@ -137,35 +136,14 @@ export default function Hero() {
             </button>
           </div>
 
-          <input
-            value={pickup}
-            onChange={(e) => setPickup(e.target.value)}
-            className="w-full mb-2 p-2 border rounded"
-          />
-
-          <input
-            value={drop}
-            onChange={(e) => setDrop(e.target.value)}
-            className="w-full mb-2 p-2 border rounded"
-          />
-
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full mb-2 p-2 border rounded"
-          />
-
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="w-full mb-3 p-2 border rounded"
-          />
+          <input value={pickup} className="input" />
+          <input value={drop} className="input" />
+          <input type="date" value={date} className="input" />
+          <input type="time" value={time} className="input" />
 
           <button
             onClick={handleSearch}
-            className="w-full bg-pink-500 text-white py-2 rounded font-semibold"
+            className="w-full bg-pink-500 text-white py-3 rounded-lg mt-2"
           >
             Check Fare
           </button>

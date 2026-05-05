@@ -6,7 +6,7 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 flex justify-between items-center h-14">
 
         <h1 className="font-bold text-lg text-pink-500">
-          CityCab
+          CityCabSolution
         </h1>
 
         <div className="flex gap-3">

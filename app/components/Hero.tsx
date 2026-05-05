@@ -2,156 +2,200 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("./MapView"), { ssr: false });
+
+type Mode = "rent" | "oneway" | "airport";
 
 export default function Hero() {
   const router = useRouter();
 
-  const services = [
-    {
-      title: "Mumbai to Pune OneWay Cab",
-      car: "Innova Crysta",
-      price: "₹5500",
-      bg: "/pune.png",
-      type: "oneway",
-    },
-    {
-      title: "Mumbai Airport Drop",
-      car: "Innova Crysta",
-      price: "₹2300",
-      bg: "/airport.png",
-      type: "airport",
-    },
-  ];
-
-  const [index, setIndex] = useState(0);
-  const [pickup, setPickup] = useState("");
+  const [mode, setMode] = useState<Mode>("oneway");
+  const [pickup, setPickup] = useState("Detecting location...");
   const [drop, setDrop] = useState("");
+  const [pkg, setPkg] = useState("8hr/80km");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // AUTO SLIDE
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((i) => (i + 1) % services.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  const [fromCoords, setFromCoords] = useState<any>(null);
+  const [toCoords, setToCoords] = useState<any>(null);
 
-  // AUTO DATE + TIME
+  // 🔥 AUTO LOCATION (GPS)
   useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        setFromCoords({ lat, lon });
+
+        // reverse geocode (address)
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        );
+        const data = await res.json();
+
+        setPickup(data.display_name || "Current Location");
+      },
+      () => {
+        setPickup("Mumbai"); // fallback
+      }
+    );
+
     const now = new Date();
     now.setHours(now.getHours() + 1);
 
     setDate(now.toISOString().split("T")[0]);
     setTime(now.toTimeString().slice(0, 5));
-
-    setPickup("Mumbai, Maharashtra, India");
-    setDrop("Mumbai Airport T1 / T2");
   }, []);
 
-  // SWITCH DROP
+  // MODE CHANGE
   useEffect(() => {
-    if (services[index].type === "airport") {
-      setDrop("Mumbai Airport T1 / T2");
-    } else {
-      setDrop("Pune, Maharashtra, India");
-    }
-  }, [index]);
+    if (mode === "airport") setDrop("Mumbai Airport");
+    if (mode === "oneway") setDrop("Pune");
+    if (mode === "rent") setDrop("");
+  }, [mode]);
 
-  const handleSearch = () => {
-    router.push(
-      `/results?pickup=${pickup}&drop=${drop}&date=${date}&time=${time}`
+  // 📍 GET COORDS
+  const getCoords = async (place: string) => {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        place + ", India"
+      )}&limit=1`
     );
+    const data = await res.json();
+
+    if (!data.length) return null;
+
+    return {
+      lat: parseFloat(data[0].lat),
+      lon: parseFloat(data[0].lon),
+    };
+  };
+
+  // 🚗 DISTANCE
+  const getDistance = async (from: any, to: any) => {
+    const res = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`
+    );
+    const data = await res.json();
+    return data.routes[0].distance / 1000;
+  };
+
+  // 💰 FARE
+  const calculateFare = (km: number) => {
+    return Math.round(500 + km * 12);
+  };
+
+  const handleSearch = async () => {
+    setLoading(true);
+
+    try {
+      let from = fromCoords;
+
+      if (!from) {
+        from = await getCoords(pickup);
+      }
+
+      let to = from;
+
+      if (mode !== "rent") {
+        to = await getCoords(drop);
+      }
+
+      if (!from || !to) {
+        alert("Location error");
+        setLoading(false);
+        return;
+      }
+
+      setFromCoords(from);
+      setToCoords(to);
+
+      const km = await getDistance(from, to);
+      const fare = calculateFare(km);
+
+      router.push(
+        `/results?mode=${mode}&pickup=${pickup}&drop=${drop}&km=${km.toFixed(
+          1
+        )}&fare=${fare}&date=${date}&time=${time}&pkg=${pkg}`
+      );
+    } catch {
+      alert("Something went wrong");
+    }
+
+    setLoading(false);
   };
 
   return (
-    <section className="relative isolate h-[85vh] md:h-screen flex items-end md:items-center overflow-hidden">
+    <section className="min-h-screen flex items-center justify-center bg-black px-4">
+      <div className="bg-white p-5 rounded-xl w-full max-w-md">
 
-      {/* BACKGROUND */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${services[index].bg})` }}
-      />
+        <h2 className="font-bold mb-3">Quick Booking</h2>
 
-      {/* DARK OVERLAY (SAFE) */}
-      <div className="absolute inset-0 bg-black/50 pointer-events-none" />
-
-      {/* CONTENT */}
-      <div className="relative z-10 w-full px-4 md:max-w-6xl mx-auto">
-
-        {/* TEXT */}
-        <div className="text-white mb-4">
-
-          <h1 className="text-2xl md:text-5xl font-bold leading-tight">
-            {services[index].title}
-          </h1>
-
-          <p className="text-sm md:text-lg text-pink-400 font-semibold mt-1">
-            {services[index].car}
-          </p>
-
-          {/* PRICE FIX (NO BLUR) */}
-          <div className="mt-3 inline-block bg-black/40 px-4 py-2 rounded-lg">
-
-            <p className="text-xs text-gray-300">
-              Starting From
-            </p>
-
-            <p className="text-2xl md:text-4xl font-bold text-pink-400">
-              {services[index].price}
-            </p>
-
-          </div>
-
+        {/* MODE */}
+        <div className="flex gap-2 mb-3">
+          {["rent", "oneway", "airport"].map((m: any) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`flex-1 py-2 rounded ${
+                mode === m ? "bg-pink-500 text-white" : "border"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
         </div>
 
-        {/* FORM */}
-        <div className="bg-white rounded-xl p-4 shadow-xl w-full md:max-w-sm mt-4 md:mt-6">
+        {/* PICKUP AUTO */}
+        <input
+          value={pickup}
+          readOnly
+          className="border w-full p-2 bg-gray-100"
+        />
 
-          <h2 className="font-semibold text-base mb-3">
-            Quick Booking
-          </h2>
+        {/* DROP */}
+        {mode !== "rent" && (
+          <input
+            value={drop}
+            onChange={(e) => setDrop(e.target.value)}
+            className="border w-full p-2 mt-2"
+          />
+        )}
 
-          <div className="flex gap-2 mb-3">
-            <button
-              onClick={() => setIndex(1)}
-              className={`flex-1 py-2 rounded ${
-                services[index].type === "airport"
-                  ? "bg-pink-500 text-white"
-                  : "border text-pink-500"
-              }`}
-            >
-              Airport
-            </button>
-
-            <button
-              onClick={() => setIndex(0)}
-              className={`flex-1 py-2 rounded ${
-                services[index].type === "oneway"
-                  ? "bg-pink-500 text-white"
-                  : "border text-pink-500"
-              }`}
-            >
-              Oneway
-            </button>
-          </div>
-
-          <input value={pickup} className="input" />
-          <input value={drop} className="input" />
-          <input type="date" value={date} className="input" />
-          <input type="time" value={time} className="input" />
-
-          <button
-            onClick={handleSearch}
-            className="w-full bg-pink-500 text-white py-3 rounded-lg mt-2"
+        {/* PACKAGE */}
+        {mode === "rent" && (
+          <select
+            value={pkg}
+            onChange={(e) => setPkg(e.target.value)}
+            className="border w-full mt-2 p-2"
           >
-            Check Fare
-          </button>
+            <option value="8hr/80km">8hr / 80km</option>
+            <option value="12hr/120km">12hr / 120km</option>
+          </select>
+        )}
 
-        </div>
+        <input type="date" value={date} onChange={(e)=>setDate(e.target.value)} className="border w-full mt-2 p-2" />
+        <input type="time" value={time} onChange={(e)=>setTime(e.target.value)} className="border w-full mt-2 p-2" />
+
+        <button
+          onClick={handleSearch}
+          className="w-full bg-pink-500 text-white p-3 mt-3"
+        >
+          {loading ? "Calculating..." : "Check Fare"}
+        </button>
+
+        {/* MAP */}
+        {fromCoords && toCoords && (
+          <div className="mt-4">
+            <MapView from={fromCoords} to={toCoords} />
+          </div>
+        )}
 
       </div>
-
     </section>
   );
 }

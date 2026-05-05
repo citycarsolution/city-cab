@@ -9,122 +9,140 @@ export default function ResultsClient() {
 
   const pickup = params.get("pickup") || "";
   const drop = params.get("drop") || "";
-  const date = params.get("date") || "";
-  const time = params.get("time") || "";
+  const mode = params.get("mode") || "oneway";
+  const pkg = params.get("pkg") || "8hr/80km";
+  const km = Number(params.get("km") || 100);
 
-  const isAirport = drop.toLowerCase().includes("airport");
+  const isAirport = mode === "airport";
+  const isRent = mode === "rent";
 
-  const cars = [
-    {
-      name: "Innova Crysta",
-      price: isAirport ? 2300 : 5500,
-      extraKm: 25,
-      seats: "6+1",
-      img: "/crysta.jpg",
-      tag: "BEST",
+  // 🔥 REAL BUSINESS PRICING
+  const pricing = {
+    oneway: {
+      baseKm: 100,
+      cars: {
+        WagonR: { price: 1800, extraKm: 13 },
+        Dzire: { price: 2000, extraKm: 15 },
+        Ertiga: { price: 2750, extraKm: 20 },
+        "Innova Crysta": { price: 4250, extraKm: 25 },
+      },
     },
-    {
-      name: "Ertiga",
-      price: isAirport ? 1800 : 4200,
-      extraKm: 18,
-      seats: "6+1",
-      img: "/ertiga.jpg",
+
+    airport: {
+      cars: {
+        WagonR: { price: 650, extraKm: 13 },
+        Dzire: { price: 750, extraKm: 15 },
+        Ertiga: { price: 950, extraKm: 20 },
+        "Innova Crysta": { price: 2300, extraKm: 25 }, // 4hr/40km
+      },
     },
-    {
-      name: "Dzire",
-      price: isAirport ? 1400 : 3200,
-      extraKm: 15,
-      seats: "4+1",
-      img: "/dzire.png",
+
+    rent: {
+      packages: {
+        "8hr/80km": {
+          WagonR: 2000,
+          Dzire: 2300,
+          Ertiga: 3000,
+          "Innova Crysta": 4000,
+        },
+        "12hr/120km": {
+          WagonR: 2500,
+          Dzire: 2900,
+          Ertiga: 3600,
+          "Innova Crysta": 4900,
+        },
+      },
     },
-  ];
-
-  const [selectedCar, setSelectedCar] = useState<any>(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-
-  const handleBooking = () => {
-    if (!name || !phone || !address) {
-      alert("Fill all details");
-      return;
-    }
-
-    const msg = `Booking Request
-Name: ${name}
-Phone: ${phone}
-Pickup: ${pickup}
-Drop: ${drop}
-Car: ${selectedCar.name}
-Price: ₹${selectedCar.price}`;
-
-    window.open(
-      `https://wa.me/919082552031?text=${encodeURIComponent(msg)}`
-    );
   };
 
-  return (
-    <main className="min-h-screen bg-gray-100 p-4 pb-24">
+  // 🚗 CAR DATA
+  const cars = [
+    { name: "WagonR", seats: "4+1", type: "CNG", luggage: "2 Bag", img: "/wagonr.jpg" },
+    { name: "Dzire", seats: "4+1", type: "Diesel", luggage: "2 Bag", img: "/dzire.png" },
+    { name: "Ertiga", seats: "6+1", type: "CNG/Diesel", luggage: "3 Bag", img: "/ertiga.jpg" },
+    { name: "Innova Crysta", seats: "6+1", type: "Diesel", luggage: "3 Bag", img: "/crysta.jpg" },
+  ];
 
-      {/* BACK */}
-      <button
-        onClick={() => router.back()}
-        className="text-pink-500 mb-4 font-semibold"
-      >
+  // 💰 PRICE FUNCTION
+  const getPrice = (carName: string) => {
+    if (isRent) {
+      return pricing.rent.packages[pkg][carName];
+    }
+
+    if (isAirport) {
+      return pricing.airport.cars[carName].price;
+    }
+
+    return pricing.oneway.cars[carName].price;
+  };
+
+  const getExtraKm = (carName: string) => {
+    if (isAirport) return pricing.airport.cars[carName].extraKm;
+    return pricing.oneway.cars[carName].extraKm;
+  };
+
+  const [selectedCar, setSelectedCar] = useState<any>(null);
+
+  return (
+    <main className="min-h-screen bg-gray-100 p-4">
+
+      <button onClick={() => router.back()} className="text-pink-500 mb-4 font-semibold">
         ← Back
       </button>
 
-      {/* TRIP INFO */}
-      <div className="bg-white p-4 rounded-xl shadow mb-4 text-sm">
-        <p><b>Pickup:</b> {pickup}</p>
-        <p><b>Drop:</b> {drop}</p>
-        <p><b>Date:</b> {date}</p>
-        <p><b>Time:</b> {time}</p>
+      {/* TRIP */}
+      <div className="bg-white p-4 rounded-xl shadow mb-4">
+        <p className="font-semibold">{pickup}</p>
+        <p>→ {drop}</p>
+
+        <p className="text-sm text-gray-500 mt-1">
+          {isRent && pkg}
+          {isAirport && "Airport Transfer"}
+          {!isRent && !isAirport && "0–100 KM Package"}
+        </p>
       </div>
 
-      {/* CAR LIST */}
+      {/* CAR CARDS */}
       {cars.map((car, i) => (
-        <div key={i} className="bg-white p-4 rounded-xl shadow mb-4">
+        <div key={i} className="bg-white rounded-xl shadow mb-4 p-4">
 
           <div className="flex gap-3">
 
-            <img
-              src={car.img}
-              className="w-24 h-16 object-cover rounded-lg"
-            />
+            <img src={car.img} className="w-28 h-20 rounded-lg object-cover" />
 
             <div className="flex-1">
 
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between">
                 <h3 className="font-bold text-lg">{car.name}</h3>
-
-                <span className="text-pink-500 font-bold text-lg">
-                  ₹ {car.price}
+                <span className="text-pink-500 text-xl font-bold">
+                  ₹{getPrice(car.name)}
                 </span>
               </div>
 
-              <p className="text-xs text-gray-500 mb-1">
-                {car.seats} Seats • AC
+              <p className="text-xs text-gray-500">
+                {car.seats} • AC • {car.type}
               </p>
 
-              {/* CONDITIONS */}
-              <div className="text-xs space-y-1 mt-2">
+              <p className="text-xs text-gray-500">
+                🧳 {car.luggage}
+              </p>
 
-                {isAirport ? (
+              {/* RULES */}
+              <div className="text-xs mt-2 space-y-1">
+
+                {!isRent && (
                   <>
-                    <p>✔ 4 Hours / 40 KM Included</p>
+                    <p>✔ Base Included</p>
+                    <p className="text-red-500">✘ Extra ₹{getExtraKm(car.name)}/km</p>
+                    <p className="text-red-500">✘ Toll / Parking Extra</p>
                     <p>✔ Driver Allowance Included</p>
-                    <p>✔ AC Car</p>
-                    <p className="text-red-500">✘ Toll & Parking Extra</p>
-                    <p className="text-red-500">✘ Extra ₹{car.extraKm}/km after limit</p>
                   </>
-                ) : (
+                )}
+
+                {isRent && (
                   <>
-                    <p>✔ 150 KM Included</p>
-                    <p>✔ Driver Allowance Included</p>
-                    <p>✔ AC Car</p>
-                    <p className="text-red-500">✘ Toll & Parking Extra</p>
-                    <p className="text-red-500">✘ Extra ₹{car.extraKm}/km after limit</p>
+                    <p>✔ {pkg} Included</p>
+                    <p className="text-red-500">✘ Extra ₹{getExtraKm(car.name)}/km</p>
                   </>
                 )}
 
@@ -134,63 +152,15 @@ Price: ₹${selectedCar.price}`;
 
           </div>
 
-          {/* BUTTON */}
           <button
             onClick={() => setSelectedCar(car)}
-            className="w-full mt-4 bg-pink-500 text-white py-3 rounded-lg font-semibold"
+            className="w-full mt-4 bg-pink-500 text-white py-3 rounded-lg"
           >
             Book Now
           </button>
 
         </div>
       ))}
-
-      {/* BOOKING MODAL */}
-      {selectedCar && (
-        <div className="fixed inset-0 bg-black/60 flex items-end md:items-center justify-center z-50">
-
-          <div className="bg-white w-full md:max-w-sm p-5 rounded-t-xl md:rounded-xl">
-
-            <h3 className="font-bold text-lg mb-3">
-              Book {selectedCar.name}
-            </h3>
-
-            <input
-              placeholder="Your Name"
-              onChange={(e) => setName(e.target.value)}
-              className="w-full mb-2 p-3 border rounded-lg"
-            />
-
-            <input
-              placeholder="Phone Number"
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full mb-2 p-3 border rounded-lg"
-            />
-
-            <textarea
-              placeholder="Pickup Address"
-              onChange={(e) => setAddress(e.target.value)}
-              className="w-full mb-3 p-3 border rounded-lg"
-            />
-
-            <button
-              onClick={handleBooking}
-              className="w-full bg-pink-500 text-white py-3 rounded-lg font-semibold"
-            >
-              Confirm Booking
-            </button>
-
-            <button
-              onClick={() => setSelectedCar(null)}
-              className="w-full mt-2 text-gray-500"
-            >
-              Cancel
-            </button>
-
-          </div>
-
-        </div>
-      )}
 
     </main>
   );

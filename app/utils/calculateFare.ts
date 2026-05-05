@@ -1,18 +1,26 @@
 import { pricing } from "./pricing";
 
 export const calculateFare = (
-  km: number,
-  mode: "oneway" | "airport",
-  car: string
+  distance: number,
+  mode: "rent" | "oneway" | "airport",
+  car: "WagonR" | "Dzire" | "Ertiga" | "Innova",
+  pkg?: "8hr/80km" | "12hr/120km"
 ) => {
-  const data = pricing[mode];
-  const carData = data.cars[car as keyof typeof data.cars];
+  if (mode === "rent") {
+    if (!pkg) return 0;
+    return pricing.rent.packages[pkg][car];
+  }
 
-  if (!carData) return 0;
+  if (mode === "oneway") {
+    if (!distance) return 0;
 
-  if (km <= data.baseKm) return carData.base;
+    const km = Math.max(distance, pricing.oneway.minKm);
+    return Math.round(km * pricing.oneway.perKm[car]);
+  }
 
-  const extraKm = km - data.baseKm;
+  if (mode === "airport") {
+    return pricing.airport.base[car];
+  }
 
-  return Math.round(carData.base + extraKm * carData.extra);
+  return 0;
 };

@@ -1,21 +1,37 @@
 export const pricing = {
-  oneway: {
-    baseKm: 100,
-    cars: {
-      WagonR: { base: 1800, extra: 13, seats: "4+1" },
-      Dzire: { base: 2000, extra: 15, seats: "4+1" },
-      Ertiga: { base: 2750, extra: 20, seats: "6+1" },
-      Innova: { base: 4250, extra: 25, seats: "6+1" },
+  rent: {
+    packages: {
+      "8hr/80km": {
+        WagonR: 2000,
+        Dzire: 2400,
+        Ertiga: 3000,
+        Innova: 4000,
+      },
+      "12hr/120km": {
+        WagonR: 2500,
+        Dzire: 3000,
+        Ertiga: 3700,
+        Innova: 4900,
+      },
     },
   },
 
+  oneway: {
+    perKm: {
+      WagonR: 12,
+      Dzire: 14,
+      Ertiga: 18,
+      Innova: 24,
+    },
+    minKm: 50,
+  },
+
   airport: {
-    baseKm: 10,
-    cars: {
-      WagonR: { base: 650, extra: 13 },
-      Dzire: { base: 750, extra: 15 },
-      Ertiga: { base: 950, extra: 20 },
-      Innova: { base: 2300, extra: 25 },
+    base: {
+      WagonR: 650,
+      Dzire: 750,
+      Ertiga: 950,
+      Innova: 2300,
     },
   },
 };

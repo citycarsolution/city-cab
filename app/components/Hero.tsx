@@ -3,14 +3,13 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { calculateFare } from "../utils/calculateFare";
-import { pricing } from "../utils/pricing";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
 type Mode = "rent" | "oneway" | "airport";
 
 export default function Hero() {
-  const [mode, setMode] = useState<Mode>("oneway");
+  const [mode, setMode] = useState<Mode>("rent");
 
   const [pickup, setPickup] = useState("Detecting...");
   const [drop, setDrop] = useState("");
@@ -19,118 +18,117 @@ export default function Hero() {
   const [fromCoords, setFromCoords] = useState<any>(null);
   const [toCoords, setToCoords] = useState<any>(null);
 
-  const [routeCoords, setRouteCoords] = useState<any[]>([]);
-  const [distance, setDistance] = useState<number>(0);
-  const [time, setTime] = useState<number>(0);
+  const [distance, setDistance] = useState(0);
+  const [route, setRoute] = useState<any[]>([]);
 
-  const [selectedCar, setSelectedCar] = useState("WagonR");
+  const [pkg, setPkg] = useState<"8hr/80km" | "12hr/120km">("8hr/80km");
 
-  // 📍 FAST LOCATION
+  // 📍 LOCATION + ADDRESS
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-      setFromCoords({ lat, lon });
-      setPickup("Your Location");
+        setFromCoords({ lat, lon });
 
-      try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
         );
         const data = await res.json();
+
         setPickup(data.display_name);
-      } catch {
-        setPickup("Your Location");
-      }
-    });
+      },
+      () => setPickup("Location not allowed"),
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
   }, []);
 
   // 🔍 SEARCH
   const searchPlace = async (q: string) => {
-    if (q.length < 3) return setDropSug([]);
+    if (q.length < 3) return;
 
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=5`
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        q + ", India"
+      )}&limit=5`
     );
 
     const data = await res.json();
     setDropSug(data);
   };
 
-  // 🚗 ROUTE + FIXED DISTANCE TYPE
+  // 🚗 ROUTE
   const getRoute = async (from: any, to: any) => {
+    if (!from || !to) return;
+
     const res = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
     );
 
     const data = await res.json();
-    const r = data.routes[0];
+    const r = data.routes?.[0];
+    if (!r) return;
 
-    const coords = r.geometry.coordinates.map((c: any) => [
-      c[1],
-      c[0],
-    ]);
+    setDistance(Number((r.distance / 1000).toFixed(1)));
 
-    setRouteCoords(coords);
-
-    // ✅ FIX (IMPORTANT)
-    setDistance(parseFloat((r.distance / 1000).toFixed(1)));
-    setTime(Math.round(r.duration / 60));
+    const coords = r.geometry.coordinates.map((c: any) => [c[1], c[0]]);
+    setRoute(coords);
   };
 
-  // 📲 WHATSAPP BOOK
-  const book = () => {
-    const price = calculateFare(distance, "oneway", selectedCar);
+  // ✈️ AIRPORT AUTO
+  useEffect(() => {
+    if (mode === "airport" && fromCoords) {
+      const airport = { lat: 19.0896, lon: 72.8656 };
 
-    const msg = `
-🚖 Booking
+      setDrop("Mumbai Airport");
+      setToCoords(airport);
+      getRoute(fromCoords, airport);
+    }
+  }, [mode, fromCoords]);
 
-Pickup: ${pickup}
-Drop: ${drop}
-Car: ${selectedCar}
-Distance: ${distance} KM
-Time: ${time} min
-Price: ₹${price}
-`;
+  const cars = ["WagonR", "Dzire", "Ertiga", "Innova"];
 
-    window.open(
-      `https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(msg)}`
-    );
-  };
-
-  const cars = Object.keys(pricing.oneway.cars);
+  const showCars = mode === "rent" || !!toCoords;
 
   return (
-    <div className="relative h-screen w-full">
+    <div className="relative h-screen">
 
       {/* MAP */}
       {fromCoords && (
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-0">
           <MapView
             from={fromCoords}
-            to={toCoords || fromCoords}
-            route={routeCoords}
+            to={toCoords}
+            route={route}
+            onPickupChange={(coords) => {
+              setFromCoords(coords);
+              if (toCoords) getRoute(coords, toCoords);
+            }}
           />
         </div>
       )}
 
       {/* CARD */}
-      <div className="absolute bottom-0 w-full p-4">
-        <div className="bg-white rounded-3xl p-4 shadow-xl max-w-md mx-auto">
+      <div className="absolute bottom-0 w-full p-3 z-10">
+        <div className="bg-white rounded-2xl p-4 shadow-xl max-h-[80vh] overflow-auto">
 
-          <h2 className="font-bold mb-2">Book Ride</h2>
+          <h2 className="font-bold text-lg mb-2">Book Your Ride</h2>
 
-          {/* SERVICE */}
+          {/* MODE */}
           <div className="flex gap-2 mb-2">
             {["rent", "oneway", "airport"].map((m) => (
               <button
                 key={m}
-                onClick={() => setMode(m as Mode)}
-                className={`flex-1 py-2 rounded-xl ${
-                  mode === m
-                    ? "bg-pink-500 text-white"
-                    : "border"
+                onClick={() => {
+                  setMode(m as Mode);
+                  setDrop("");
+                  setToCoords(null);
+                  setRoute([]);
+                  setDistance(0);
+                }}
+                className={`flex-1 py-2 rounded-lg ${
+                  mode === m ? "bg-pink-500 text-white" : "border"
                 }`}
               >
                 {m}
@@ -139,7 +137,11 @@ Price: ₹${price}
           </div>
 
           {/* PICKUP */}
-          <input value={pickup} readOnly className="input bg-gray-100" />
+          <input
+            value={pickup}
+            readOnly
+            className="input bg-gray-100"
+          />
 
           {/* DROP */}
           {mode !== "rent" && (
@@ -150,23 +152,23 @@ Price: ₹${price}
                   setDrop(e.target.value);
                   searchPlace(e.target.value);
                 }}
-                placeholder="Enter Drop"
+                placeholder="Enter Drop Location"
                 className="input"
               />
 
               {dropSug.length > 0 && (
-                <div className="absolute bg-white w-full border rounded shadow z-50">
-                  {dropSug.map((i, idx) => (
+                <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-lg shadow">
+                  {dropSug.map((item, i) => (
                     <div
-                      key={idx}
-                      className="p-2 cursor-pointer hover:bg-gray-100"
+                      key={i}
+                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
                       onClick={async () => {
-                        setDrop(i.display_name);
+                        setDrop(item.display_name);
                         setDropSug([]);
 
                         const to = {
-                          lat: parseFloat(i.lat),
-                          lon: parseFloat(i.lon),
+                          lat: parseFloat(item.lat),
+                          lon: parseFloat(item.lon),
                         };
 
                         setToCoords(to);
@@ -176,7 +178,7 @@ Price: ₹${price}
                         }
                       }}
                     >
-                      {i.display_name}
+                      {item.display_name}
                     </div>
                   ))}
                 </div>
@@ -184,42 +186,45 @@ Price: ₹${price}
             </div>
           )}
 
-          {/* RESULT */}
-          {distance > 0 && (
-            <div className="bg-gray-100 p-2 rounded mt-2 text-sm">
-              🚗 {distance} KM • ⏱ {time} min
+          {/* RENT PACKAGE */}
+          {mode === "rent" && (
+            <select
+              value={pkg}
+              onChange={(e) => setPkg(e.target.value as any)}
+              className="input"
+            >
+              <option value="8hr/80km">8hr / 80km</option>
+              <option value="12hr/120km">12hr / 120km</option>
+            </select>
+          )}
+
+          {/* DISTANCE */}
+          {distance > 0 && mode !== "rent" && (
+            <div className="text-sm text-gray-600 mb-2">
+              🚗 {distance} km
             </div>
           )}
 
           {/* CARS */}
-          <div className="mt-3 space-y-2">
-            {cars.map((car) => {
-              const price = calculateFare(distance, "oneway", car);
+          {showCars && (
+            <div className="space-y-2 mt-2">
+              {cars.map((car) => {
+                const price = calculateFare(distance, mode, car as any, pkg);
 
-              return (
-                <div
-                  key={car}
-                  onClick={() => setSelectedCar(car)}
-                  className={`p-3 rounded-xl border flex justify-between cursor-pointer ${
-                    selectedCar === car
-                      ? "bg-pink-50 border-pink-500"
-                      : ""
-                  }`}
-                >
-                  <span>{car}</span>
-                  <span>₹{price}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={book}
-            className="w-full bg-green-500 text-white py-3 rounded-xl mt-3"
-          >
-            Book on WhatsApp
-          </button>
-
+                return (
+                  <div
+                    key={car}
+                    className="border rounded-xl p-3 flex justify-between"
+                  >
+                    <span>{car}</span>
+                    <span className="text-pink-500 font-bold">
+                      ₹{price}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

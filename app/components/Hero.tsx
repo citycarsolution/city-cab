@@ -5,14 +5,17 @@ import dynamic from "next/dynamic";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
+type Mode = "rent" | "oneway" | "airport";
+
 export default function Hero() {
+  const [mode, setMode] = useState<Mode>("oneway");
+
   const [pickup, setPickup] = useState("Detecting...");
   const [drop, setDrop] = useState("");
   const [dropSug, setDropSug] = useState<any[]>([]);
 
   const [fromCoords, setFromCoords] = useState<any>(null);
   const [toCoords, setToCoords] = useState<any>(null);
-
   const [routeCoords, setRouteCoords] = useState<any[]>([]);
 
   // 📍 AUTO LOCATION
@@ -33,7 +36,10 @@ export default function Hero() {
 
   // 🔍 AUTOCOMPLETE
   const searchPlace = async (q: string) => {
-    if (q.length < 3) return;
+    if (q.length < 3) {
+      setDropSug([]);
+      return;
+    }
 
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
@@ -45,7 +51,7 @@ export default function Hero() {
     setDropSug(data);
   };
 
-  // 🚗 REAL ROUTE (OSRM)
+  // 🚗 ROUTE
   const getRoute = async (from: any, to: any) => {
     const res = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
@@ -63,7 +69,7 @@ export default function Hero() {
   return (
     <div className="relative h-screen w-full">
 
-      {/* 🔥 FULL MAP */}
+      {/* 🔥 FULL SCREEN MAP */}
       {fromCoords && (
         <div className="absolute inset-0 z-0">
           <MapView
@@ -76,9 +82,26 @@ export default function Hero() {
 
       {/* 🔥 FLOATING CARD */}
       <div className="absolute bottom-0 w-full p-4 z-10">
-        <div className="bg-white rounded-2xl p-4 shadow-2xl">
+        <div className="bg-white rounded-2xl p-4 shadow-2xl max-w-md mx-auto">
 
           <h2 className="font-bold text-lg mb-3">Book Your Ride</h2>
+
+          {/* 🔥 SERVICE TABS */}
+          <div className="flex gap-2 mb-3">
+            {["rent", "oneway", "airport"].map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m as Mode)}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium ${
+                  mode === m
+                    ? "bg-pink-500 text-white"
+                    : "border"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
 
           {/* PICKUP */}
           <input
@@ -87,48 +110,58 @@ export default function Hero() {
             className="input bg-gray-100"
           />
 
-          {/* DROP */}
-          <div className="relative">
-            <input
-              value={drop}
-              onChange={(e) => {
-                setDrop(e.target.value);
-                searchPlace(e.target.value);
-              }}
-              placeholder="Enter Drop Location"
-              className="input"
-            />
+          {/* DROP (rent में hide) */}
+          {mode !== "rent" && (
+            <div className="relative">
+              <input
+                value={drop}
+                onChange={(e) => {
+                  setDrop(e.target.value);
+                  searchPlace(e.target.value);
+                }}
+                placeholder="Enter Drop Location"
+                className="input"
+              />
 
-            {dropSug.length > 0 && (
-              <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-lg shadow">
-                {dropSug.map((item, i) => (
-                  <div
-                    key={i}
-                    className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                    onClick={async () => {
-                      setDrop(item.display_name);
-                      setDropSug([]);
+              {dropSug.length > 0 && (
+                <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-lg shadow">
+                  {dropSug.map((item, i) => (
+                    <div
+                      key={i}
+                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                      onClick={async () => {
+                        setDrop(item.display_name);
+                        setDropSug([]);
 
-                      const to = {
-                        lat: parseFloat(item.lat),
-                        lon: parseFloat(item.lon),
-                      };
+                        const to = {
+                          lat: parseFloat(item.lat),
+                          lon: parseFloat(item.lon),
+                        };
 
-                      setToCoords(to);
+                        setToCoords(to);
 
-                      // 🔥 CALL ROUTE
-                      if (fromCoords) {
-                        await getRoute(fromCoords, to);
-                      }
-                    }}
-                  >
-                    {item.display_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                        if (fromCoords) {
+                          await getRoute(fromCoords, to);
+                        }
+                      }}
+                    >
+                      {item.display_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
+          {/* RENT PACKAGE */}
+          {mode === "rent" && (
+            <select className="input">
+              <option>8hr / 80km</option>
+              <option>12hr / 120km</option>
+            </select>
+          )}
+
+          {/* BUTTON */}
           <button className="w-full bg-pink-500 text-white py-3 rounded-xl mt-2">
             Check Fare
           </button>

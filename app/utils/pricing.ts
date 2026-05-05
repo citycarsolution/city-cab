@@ -23,7 +23,7 @@ export const pricing = {
       Ertiga: 18,
       Innova: 24,
     },
-    minKm: 50,
+    minKm: 100,
   },
 
   airport: {

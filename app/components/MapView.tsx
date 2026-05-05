@@ -1,17 +1,22 @@
 "use client";
 
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import L from "leaflet";
 
 type Props = {
-  from: any;
-  to: any;
+  from: { lat: number; lon: number };
+  to: { lat: number; lon: number };
 };
 
 export default function MapView({ from, to }: Props) {
   if (!from || !to) return null;
 
-  const center = [from.lat, from.lon];
+  // ✅ FIXED TYPE
+  const center: [number, number] = [from.lat, from.lon];
+
+  const route: [number, number][] = [
+    [from.lat, from.lon],
+    [to.lat, to.lon],
+  ];
 
   return (
     <MapContainer
@@ -24,20 +29,10 @@ export default function MapView({ from, to }: Props) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {/* Pickup Marker */}
-      <Marker position={[from.lat, from.lon]} />
-
-      {/* Drop Marker */}
+      <Marker position={center} />
       <Marker position={[to.lat, to.lon]} />
 
-      {/* Route Line */}
-      <Polyline
-        positions={[
-          [from.lat, from.lon],
-          [to.lat, to.lon],
-        ]}
-        color="blue"
-      />
+      <Polyline positions={route} color="blue" />
     </MapContainer>
   );
 }

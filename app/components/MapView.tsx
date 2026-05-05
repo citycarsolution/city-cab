@@ -1,11 +1,11 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import L from "leaflet";
-import { useEffect } from "react";
 import "leaflet/dist/leaflet.css";
+import { useEffect, useState } from "react";
 
-// 🔥 FIX MARKER
+// 🔥 MARKER FIX
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -16,61 +16,77 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
+// 🚗 CAB ICON
+const cabIcon = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/743/743922.png",
+  iconSize: [30, 30],
+});
+
 type Props = {
   from: { lat: number; lon: number };
   to: { lat: number; lon: number };
-  route?: any[];
+  route: any[];
 };
 
-// 🔥 AUTO CENTER + FIT ROUTE
-function ChangeView({ from, to, route }: any) {
-  const map = useMap();
+export default function MapView({ from, to, route }: Props) {
+  const [cabs, setCabs] = useState<any[]>([]);
 
+  // 🔥 GENERATE RANDOM CABS
   useEffect(() => {
-    if (route && route.length > 0) {
-      map.fitBounds(route);
-    } else {
-      map.setView([from.lat, from.lon], 13);
-    }
-  }, [from, to, route, map]);
+    if (!from) return;
 
-  return null;
-}
+    const generateCabs = () => {
+      let temp: any[] = [];
 
-export default function MapView({ from, to, route = [] }: Props) {
-  if (!from || !to) return null;
+      for (let i = 0; i < 15; i++) {
+        temp.push({
+          lat: from.lat + (Math.random() - 0.5) * 0.02,
+          lon: from.lon + (Math.random() - 0.5) * 0.02,
+        });
+      }
 
-  const fallbackRoute: [number, number][] = [
-    [from.lat, from.lon],
-    [to.lat, to.lon],
-  ];
+      setCabs(temp);
+    };
+
+    generateCabs();
+
+    // 🔥 MOVE CABS (animation feel)
+    const interval = setInterval(generateCabs, 4000);
+
+    return () => clearInterval(interval);
+  }, [from]);
+
+  const center: [number, number] = [from.lat, from.lon];
 
   return (
     <div className="w-full h-screen">
       <MapContainer
-        center={[from.lat, from.lon]}
+        center={center}
         zoom={13}
         scrollWheelZoom={true}
         className="w-full h-full"
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="&copy; OpenStreetMap"
-        />
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {/* 🔥 AUTO VIEW */}
-        <ChangeView from={from} to={to} route={route} />
-
-        {/* MARKERS */}
+        {/* 📍 USER */}
         <Marker position={[from.lat, from.lon]} />
-        <Marker position={[to.lat, to.lon]} />
 
-        {/* 🔥 REAL ROUTE */}
-        <Polyline
-          positions={route.length ? route : fallbackRoute}
-          color="#ec4899"
-          weight={5}
-        />
+        {/* 📍 DESTINATION */}
+        {to && <Marker position={[to.lat, to.lon]} />}
+
+        {/* 🚗 ROUTE */}
+        {route.length > 0 && (
+          <Polyline positions={route} color="#ec4899" />
+        )}
+
+        {/* 🚗 LIVE CABS */}
+        {cabs.map((cab, i) => (
+          <Marker
+            key={i}
+            position={[cab.lat, cab.lon]}
+            icon={cabIcon}
+          />
+        ))}
       </MapContainer>
     </div>
   );

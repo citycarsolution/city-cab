@@ -10,22 +10,27 @@ type Mode = "rent" | "oneway" | "airport";
 export default function Hero() {
   const [mode, setMode] = useState<Mode>("oneway");
 
-  const [pickup, setPickup] = useState("Detecting...");
+  const [pickup, setPickup] = useState("Detecting location...");
   const [drop, setDrop] = useState("");
   const [dropSug, setDropSug] = useState<any[]>([]);
 
   const [fromCoords, setFromCoords] = useState<any>(null);
   const [toCoords, setToCoords] = useState<any>(null);
-  const [routeCoords, setRouteCoords] = useState<any[]>([]);
 
-  // 📍 AUTO LOCATION
+  const [routeCoords, setRouteCoords] = useState<any[]>([]);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [time, setTime] = useState<number | null>(null);
+
+  // ⚡ FAST LOCATION (instant feel)
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
 
       setFromCoords({ lat, lon });
+      setPickup("Your Current Location");
 
+      // background reverse
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
       );
@@ -34,7 +39,7 @@ export default function Hero() {
     });
   }, []);
 
-  // 🔍 AUTOCOMPLETE
+  // 🔍 SEARCH
   const searchPlace = async (q: string) => {
     if (q.length < 3) {
       setDropSug([]);
@@ -42,16 +47,14 @@ export default function Hero() {
     }
 
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        q + ", India"
-      )}&limit=5`
+      `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=5`
     );
 
     const data = await res.json();
     setDropSug(data);
   };
 
-  // 🚗 ROUTE
+  // 🚗 ROUTE + DISTANCE
   const getRoute = async (from: any, to: any) => {
     const res = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
@@ -59,17 +62,23 @@ export default function Hero() {
 
     const data = await res.json();
 
-    const coords = data.routes[0].geometry.coordinates.map(
-      (c: any) => [c[1], c[0]]
-    );
+    const route = data.routes[0];
+
+    const coords = route.geometry.coordinates.map((c: any) => [
+      c[1],
+      c[0],
+    ]);
 
     setRouteCoords(coords);
+
+    setDistance((route.distance / 1000).toFixed(1));
+    setTime(Math.round(route.duration / 60));
   };
 
   return (
     <div className="relative h-screen w-full">
 
-      {/* 🔥 FULL SCREEN MAP */}
+      {/* 🌍 MAP */}
       {fromCoords && (
         <div className="absolute inset-0 z-0">
           <MapView
@@ -80,19 +89,19 @@ export default function Hero() {
         </div>
       )}
 
-      {/* 🔥 FLOATING CARD */}
+      {/* 🚀 CARD */}
       <div className="absolute bottom-0 w-full p-4 z-10">
-        <div className="bg-white rounded-2xl p-4 shadow-2xl max-w-md mx-auto">
+        <div className="bg-white rounded-3xl p-4 shadow-xl max-w-md mx-auto">
 
           <h2 className="font-bold text-lg mb-3">Book Your Ride</h2>
 
-          {/* 🔥 SERVICE TABS */}
+          {/* 🔥 SERVICE */}
           <div className="flex gap-2 mb-3">
             {["rent", "oneway", "airport"].map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m as Mode)}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium ${
+                className={`flex-1 py-2 rounded-xl ${
                   mode === m
                     ? "bg-pink-500 text-white"
                     : "border"
@@ -104,13 +113,9 @@ export default function Hero() {
           </div>
 
           {/* PICKUP */}
-          <input
-            value={pickup}
-            readOnly
-            className="input bg-gray-100"
-          />
+          <input value={pickup} readOnly className="input bg-gray-100" />
 
-          {/* DROP (rent में hide) */}
+          {/* DROP */}
           {mode !== "rent" && (
             <div className="relative">
               <input
@@ -153,7 +158,7 @@ export default function Hero() {
             </div>
           )}
 
-          {/* RENT PACKAGE */}
+          {/* 📦 RENT */}
           {mode === "rent" && (
             <select className="input">
               <option>8hr / 80km</option>
@@ -161,8 +166,14 @@ export default function Hero() {
             </select>
           )}
 
-          {/* BUTTON */}
-          <button className="w-full bg-pink-500 text-white py-3 rounded-xl mt-2">
+          {/* 📊 RESULT */}
+          {distance && (
+            <div className="bg-gray-100 p-3 rounded-xl text-sm mt-2">
+              🚗 {distance} KM • ⏱ {time} min
+            </div>
+          )}
+
+          <button className="w-full bg-pink-500 text-white py-3 rounded-xl mt-3">
             Check Fare
           </button>
 

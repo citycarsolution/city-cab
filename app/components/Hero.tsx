@@ -12,9 +12,10 @@ export default function Hero() {
   const router = useRouter();
 
   const [mode, setMode] = useState<Mode>("oneway");
-  const [pickup, setPickup] = useState("Detecting location...");
+  const [pickup, setPickup] = useState("Detecting...");
   const [drop, setDrop] = useState("");
-  const [pkg, setPkg] = useState("8hr/80km");
+  const [dropSug, setDropSug] = useState<any[]>([]);
+
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,109 +23,72 @@ export default function Hero() {
   const [fromCoords, setFromCoords] = useState<any>(null);
   const [toCoords, setToCoords] = useState<any>(null);
 
-  // 🔥 AUTO LOCATION (GPS)
+  // 📍 AUTO LOCATION
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
 
-        setFromCoords({ lat, lon });
+      setFromCoords({ lat, lon });
 
-        // reverse geocode (address)
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-        );
-        const data = await res.json();
-
-        setPickup(data.display_name || "Current Location");
-      },
-      () => {
-        setPickup("Mumbai"); // fallback
-      }
-    );
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+      );
+      const data = await res.json();
+      setPickup(data.display_name);
+    });
 
     const now = new Date();
     now.setHours(now.getHours() + 1);
-
     setDate(now.toISOString().split("T")[0]);
     setTime(now.toTimeString().slice(0, 5));
   }, []);
 
-  // MODE CHANGE
-  useEffect(() => {
-    if (mode === "airport") setDrop("Mumbai Airport");
-    if (mode === "oneway") setDrop("Pune");
-    if (mode === "rent") setDrop("");
-  }, [mode]);
+  // 🔍 AUTOCOMPLETE
+  const searchPlace = async (q: string) => {
+    if (q.length < 3) return;
 
-  // 📍 GET COORDS
-  const getCoords = async (place: string) => {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        place + ", India"
-      )}&limit=1`
+        q + ", India"
+      )}&limit=5`
+    );
+
+    const data = await res.json();
+    setDropSug(data);
+  };
+
+  // 🚗 ROUTE + TIME
+  const getRoute = async (from: any, to: any) => {
+    const res = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
     );
     const data = await res.json();
-
-    if (!data.length) return null;
 
     return {
-      lat: parseFloat(data[0].lat),
-      lon: parseFloat(data[0].lon),
+      km: data.routes[0].distance / 1000,
+      time: data.routes[0].duration / 60,
     };
-  };
-
-  // 🚗 DISTANCE
-  const getDistance = async (from: any, to: any) => {
-    const res = await fetch(
-      `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`
-    );
-    const data = await res.json();
-    return data.routes[0].distance / 1000;
-  };
-
-  // 💰 FARE
-  const calculateFare = (km: number) => {
-    return Math.round(500 + km * 12);
   };
 
   const handleSearch = async () => {
     setLoading(true);
 
-    try {
-      let from = fromCoords;
+    const to = toCoords;
 
-      if (!from) {
-        from = await getCoords(pickup);
-      }
-
-      let to = from;
-
-      if (mode !== "rent") {
-        to = await getCoords(drop);
-      }
-
-      if (!from || !to) {
-        alert("Location error");
-        setLoading(false);
-        return;
-      }
-
-      setFromCoords(from);
-      setToCoords(to);
-
-      const km = await getDistance(from, to);
-      const fare = calculateFare(km);
-
-      router.push(
-        `/results?mode=${mode}&pickup=${pickup}&drop=${drop}&km=${km.toFixed(
-          1
-        )}&fare=${fare}&date=${date}&time=${time}&pkg=${pkg}`
-      );
-    } catch {
-      alert("Something went wrong");
+    if (!fromCoords || !to) {
+      alert("Select valid location");
+      setLoading(false);
+      return;
     }
+
+    const route = await getRoute(fromCoords, to);
+
+    router.push(
+      `/results?mode=${mode}&pickup=${pickup}&drop=${drop}&km=${route.km.toFixed(
+        1
+      )}&time=${route.time.toFixed(0)}`
+    );
 
     setLoading(false);
   };
@@ -150,33 +114,47 @@ export default function Hero() {
           ))}
         </div>
 
-        {/* PICKUP AUTO */}
+        {/* PICKUP */}
         <input
           value={pickup}
           readOnly
           className="border w-full p-2 bg-gray-100"
         />
 
-        {/* DROP */}
-        {mode !== "rent" && (
+        {/* DROP AUTOCOMPLETE */}
+        <div className="relative mt-2">
           <input
             value={drop}
-            onChange={(e) => setDrop(e.target.value)}
-            className="border w-full p-2 mt-2"
+            onChange={(e) => {
+              setDrop(e.target.value);
+              searchPlace(e.target.value);
+            }}
+            placeholder="Enter Drop"
+            className="border w-full p-2"
           />
-        )}
 
-        {/* PACKAGE */}
-        {mode === "rent" && (
-          <select
-            value={pkg}
-            onChange={(e) => setPkg(e.target.value)}
-            className="border w-full mt-2 p-2"
-          >
-            <option value="8hr/80km">8hr / 80km</option>
-            <option value="12hr/120km">12hr / 120km</option>
-          </select>
-        )}
+          {dropSug.length > 0 && (
+            <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50">
+              {dropSug.map((item, i) => (
+                <div
+                  key={i}
+                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setDrop(item.display_name);
+                    setDropSug([]);
+
+                    setToCoords({
+                      lat: parseFloat(item.lat),
+                      lon: parseFloat(item.lon),
+                    });
+                  }}
+                >
+                  {item.display_name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <input type="date" value={date} onChange={(e)=>setDate(e.target.value)} className="border w-full mt-2 p-2" />
         <input type="time" value={time} onChange={(e)=>setTime(e.target.value)} className="border w-full mt-2 p-2" />

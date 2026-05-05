@@ -10,7 +10,6 @@ type Props = {
 export default function MapView({ from, to }: Props) {
   if (!from || !to) return null;
 
-  // ✅ FIXED TYPE
   const center: [number, number] = [from.lat, from.lon];
 
   const route: [number, number][] = [
@@ -24,10 +23,7 @@ export default function MapView({ from, to }: Props) {
       zoom={7}
       style={{ height: "300px", width: "100%", borderRadius: "10px" }}
     >
-      <TileLayer
-        attribution="&copy; OpenStreetMap"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
       <Marker position={center} />
       <Marker position={[to.lat, to.lon]} />

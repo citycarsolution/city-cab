@@ -6,32 +6,29 @@
   --foreground: #171717;
 }
 
-/* DARK MODE (optional safe) */
+/* DARK MODE SAFE */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff; /* force light for better UI */
+    --background: #ffffff;
     --foreground: #171717;
   }
 }
 
-/* BASE BODY */
+/* BODY */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-
-  /* 🔥 IMPORTANT FIX */
-  opacity: 1 !important;
-  filter: none !important;
+  overflow-x: hidden;
 }
 
-/* 🔥 GLOBAL BLUR FIX (MOBILE ISSUE SOLVED) */
-* {
+/* 🔥 REMOVE ONLY PROBLEMATIC BLUR (SAFE WAY) */
+.blur-fix {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-/* INPUT STYLING */
+/* INPUT */
 .input {
   width: 100%;
   padding: 10px;
@@ -43,11 +40,11 @@ body {
 }
 
 .input:focus {
-  border-color: #ec4899; /* pink */
+  border-color: #ec4899;
   box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
 }
 
-/* BUTTON SMOOTH */
+/* BUTTON */
 button {
   transition: all 0.2s ease;
 }
@@ -56,20 +53,19 @@ button:active {
   transform: scale(0.97);
 }
 
-/* IMAGE SHARP */
+/* IMAGE */
 img {
   display: block;
   max-width: 100%;
   height: auto;
 }
 
-/* REMOVE ANY RANDOM FADE */
-section,
-div {
-  opacity: 1 !important;
+/* SECTION FIX */
+section, div {
+  opacity: 1;
 }
 
-/* MOBILE SAFE FIX */
-html, body {
-  overflow-x: hidden;
+/* MAP FIX (VERY IMPORTANT) */
+.leaflet-container {
+  z-index: 0 !important;
 }

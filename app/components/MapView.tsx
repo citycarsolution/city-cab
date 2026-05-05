@@ -5,7 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 
-// 🔥 MARKER FIX
+// 🔥 marker fix
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -16,10 +16,10 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
-// 🚗 CAB ICON
+// 🚗 cab icon
 const cabIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/743/743922.png",
-  iconSize: [30, 30],
+  iconSize: [28, 28],
 });
 
 type Props = {
@@ -31,14 +31,14 @@ type Props = {
 export default function MapView({ from, to, route }: Props) {
   const [cabs, setCabs] = useState<any[]>([]);
 
-  // 🔥 GENERATE RANDOM CABS
+  // 🚗 fake cab animation
   useEffect(() => {
     if (!from) return;
 
-    const generateCabs = () => {
-      let temp: any[] = [];
+    const generate = () => {
+      const temp: any[] = [];
 
-      for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < 12; i++) {
         temp.push({
           lat: from.lat + (Math.random() - 0.5) * 0.02,
           lon: from.lon + (Math.random() - 0.5) * 0.02,
@@ -48,42 +48,35 @@ export default function MapView({ from, to, route }: Props) {
       setCabs(temp);
     };
 
-    generateCabs();
+    generate();
+    const i = setInterval(generate, 4000);
 
-    // 🔥 MOVE CABS (animation feel)
-    const interval = setInterval(generateCabs, 4000);
-
-    return () => clearInterval(interval);
+    return () => clearInterval(i);
   }, [from]);
 
   const center: [number, number] = [from.lat, from.lon];
 
   return (
     <div className="w-full h-screen">
-      <MapContainer
-        center={center}
-        zoom={13}
-        scrollWheelZoom={true}
-        className="w-full h-full"
-      >
+      <MapContainer center={center} zoom={13} className="w-full h-full">
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {/* 📍 USER */}
+        {/* user */}
         <Marker position={[from.lat, from.lon]} />
 
-        {/* 📍 DESTINATION */}
+        {/* drop */}
         {to && <Marker position={[to.lat, to.lon]} />}
 
-        {/* 🚗 ROUTE */}
+        {/* route */}
         {route.length > 0 && (
           <Polyline positions={route} color="#ec4899" />
         )}
 
-        {/* 🚗 LIVE CABS */}
-        {cabs.map((cab, i) => (
+        {/* cabs */}
+        {cabs.map((c, i) => (
           <Marker
             key={i}
-            position={[cab.lat, cab.lon]}
+            position={[c.lat, c.lon]}
             icon={cabIcon}
           />
         ))}

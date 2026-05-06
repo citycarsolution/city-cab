@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { calculateFare } from "../utils/calculateFare";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
@@ -9,6 +10,8 @@ const MapView = dynamic(() => import("./MapView"), { ssr: false });
 type Mode = "rent" | "oneway" | "airport";
 
 export default function Hero() {
+  const router = useRouter();
+
   const [mode, setMode] = useState<Mode>("rent");
 
   const [pickup, setPickup] = useState("Detecting...");
@@ -23,7 +26,6 @@ export default function Hero() {
 
   const [pkg, setPkg] = useState<"8hr/80km" | "12hr/120km">("8hr/80km");
 
-  // 🔥 NEW: selected car
   const [selectedCar, setSelectedCar] = useState<string | null>(null);
 
   // 📍 LOCATION
@@ -235,7 +237,23 @@ export default function Hero() {
 
           {/* 🔥 BOOK BUTTON */}
           {selectedCar && (
-            <button className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold text-lg shadow-lg">
+            <button
+              onClick={() => {
+                const price = calculateFare(
+                  distance,
+                  mode,
+                  selectedCar as any,
+                  pkg
+                );
+
+                router.push(
+                  `/booking?car=${selectedCar}&mode=${mode}&price=${price}&pickup=${encodeURIComponent(
+                    pickup
+                  )}&drop=${encodeURIComponent(drop)}&distance=${distance}`
+                );
+              }}
+              className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold text-lg shadow-lg"
+            >
               Book {selectedCar}
             </button>
           )}

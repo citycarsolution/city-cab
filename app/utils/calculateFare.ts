@@ -6,14 +6,24 @@ export const calculateFare = (
   car: "WagonR" | "Dzire" | "Ertiga" | "Innova",
   pkg?: "8hr/80km" | "12hr/120km"
 ) => {
+  let fare = 0;
+
+  const hour = new Date().getHours();
+
+  // 🌙 NIGHT CHECK
+  const isNight = hour >= 22 || hour <= 6;
+
+  // 🔥 SURGE CHECK (example: 8-10 AM & 6-9 PM)
+  const isSurge =
+    (hour >= 8 && hour <= 10) || (hour >= 18 && hour <= 21);
 
   // 🟢 RENT
   if (mode === "rent") {
     if (!pkg) return 0;
-    return pricing.rent.packages[pkg][car];
+    fare = pricing.rent.packages[pkg][car];
   }
 
-  // 🟣 ONEWAY (🔥 FIXED)
+  // 🟣 ONEWAY
   if (mode === "oneway") {
     if (!distance) return 0;
 
@@ -21,20 +31,31 @@ export const calculateFare = (
     const perKm = pricing.oneway.perKm[car];
     const minKm = pricing.oneway.minKm;
 
-    // 👉 if <=100 km → fixed price
     if (distance <= minKm) {
-      return base;
+      fare = base;
+    } else {
+      const extraKm = distance - minKm;
+      fare = base + extraKm * perKm;
     }
 
-    // 👉 if >100 km → base + extra
-    const extraKm = distance - minKm;
-    return Math.round(base + extraKm * perKm);
+    // 🧾 DRIVER ALLOWANCE
+    fare += pricing.oneway.driverAllowance;
   }
 
   // 🔵 AIRPORT
   if (mode === "airport") {
-    return pricing.airport.base[car];
+    fare = pricing.airport.base[car];
   }
 
-  return 0;
+  // 🌙 APPLY NIGHT
+  if (isNight) {
+    fare *= pricing.extra.nightCharge;
+  }
+
+  // 🔥 APPLY SURGE
+  if (isSurge) {
+    fare *= pricing.extra.surge;
+  }
+
+  return Math.round(fare);
 };

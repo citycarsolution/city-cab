@@ -30,6 +30,7 @@ export const pricing = {
       Innova: 25,
     },
     minKm: 100,
+    driverAllowance: 300,
   },
 
   airport: {
@@ -39,5 +40,11 @@ export const pricing = {
       Ertiga: 950,
       Innova: 2300,
     },
+  },
+
+  // 🔥 ADVANCED RULES
+  extra: {
+    nightCharge: 1.2, // 20% extra
+    surge: 1.3, // peak pricing
   },
 };

@@ -23,7 +23,10 @@ export default function Hero() {
 
   const [pkg, setPkg] = useState<"8hr/80km" | "12hr/120km">("8hr/80km");
 
-  // 📍 LOCATION + ADDRESS
+  // 🔥 NEW: selected car
+  const [selectedCar, setSelectedCar] = useState<string | null>(null);
+
+  // 📍 LOCATION
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -101,10 +104,6 @@ export default function Hero() {
             from={fromCoords}
             to={toCoords}
             route={route}
-            onPickupChange={(coords) => {
-              setFromCoords(coords);
-              if (toCoords) getRoute(coords, toCoords);
-            }}
           />
         </div>
       )}
@@ -126,6 +125,7 @@ export default function Hero() {
                   setToCoords(null);
                   setRoute([]);
                   setDistance(0);
+                  setSelectedCar(null);
                 }}
                 className={`flex-1 py-2 rounded-lg ${
                   mode === m ? "bg-pink-500 text-white" : "border"
@@ -137,11 +137,7 @@ export default function Hero() {
           </div>
 
           {/* PICKUP */}
-          <input
-            value={pickup}
-            readOnly
-            className="input bg-gray-100"
-          />
+          <input value={pickup} readOnly className="input bg-gray-100" />
 
           {/* DROP */}
           {mode !== "rent" && (
@@ -205,26 +201,45 @@ export default function Hero() {
             </div>
           )}
 
-          {/* CARS */}
+          {/* 🚗 CAR GRID */}
           {showCars && (
-            <div className="space-y-2 mt-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
               {cars.map((car) => {
                 const price = calculateFare(distance, mode, car as any, pkg);
+                const isActive = selectedCar === car;
 
                 return (
                   <div
                     key={car}
-                    className="border rounded-xl p-3 flex justify-between"
+                    onClick={() => setSelectedCar(car)}
+                    className={`cursor-pointer border rounded-xl p-3 text-center transition duration-200
+                      ${isActive
+                        ? "border-pink-500 shadow-lg scale-105"
+                        : "hover:shadow-lg hover:scale-105"
+                      }`}
                   >
-                    <span>{car}</span>
-                    <span className="text-pink-500 font-bold">
+                    <div className="font-semibold text-sm">{car}</div>
+
+                    <div className="text-xs text-gray-500">
+                      AC • 4+1 • 2 Bags
+                    </div>
+
+                    <div className="text-pink-500 font-bold mt-1 text-lg">
                       ₹{price}
-                    </span>
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
+
+          {/* 🔥 BOOK BUTTON */}
+          {selectedCar && (
+            <button className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold text-lg shadow-lg">
+              Book {selectedCar}
+            </button>
+          )}
+
         </div>
       </div>
     </div>

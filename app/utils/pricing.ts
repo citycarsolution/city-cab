@@ -17,11 +17,17 @@ export const pricing = {
   },
 
   oneway: {
+    base: {
+      WagonR: 1800,
+      Dzire: 2000,
+      Ertiga: 2750,
+      Innova: 4250,
+    },
     perKm: {
-      WagonR: 12,
-      Dzire: 14,
-      Ertiga: 18,
-      Innova: 24,
+      WagonR: 13,
+      Dzire: 15,
+      Ertiga: 20,
+      Innova: 25,
     },
     minKm: 100,
   },

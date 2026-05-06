@@ -20,8 +20,8 @@ export default function BookingForm({ data }: any) {
       setLoading(true);
 
       await emailjs.send(
-        "YOUR_SERVICE_ID", // 👉 replace
-        "YOUR_TEMPLATE_ID", // 👉 replace
+        "YOUR_SERVICE_ID",
+        "YOUR_TEMPLATE_ID",
         {
           car: data.car,
           mode: data.mode,
@@ -33,7 +33,7 @@ export default function BookingForm({ data }: any) {
           email: form.email,
           address: form.address,
         },
-        "YOUR_PUBLIC_KEY" // 👉 replace
+        "YOUR_PUBLIC_KEY"
       );
 
       alert("Booking Sent 🚖");
@@ -54,15 +54,19 @@ export default function BookingForm({ data }: any) {
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow">
+    <div className="bg-white/90 backdrop-blur rounded-2xl p-4 shadow-xl border">
 
-      <h3 className="font-bold mb-3">Enter Details</h3>
+      {/* HEADER */}
+      <h3 className="text-lg font-semibold mb-3">
+        Enter Details
+      </h3>
 
       <form onSubmit={handleSubmit} className="space-y-3">
 
+        {/* NAME */}
         <input
-          placeholder="Name"
-          className="input"
+          placeholder="Full Name"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
           required
           value={form.name}
           onChange={(e) =>
@@ -70,9 +74,10 @@ export default function BookingForm({ data }: any) {
           }
         />
 
+        {/* PHONE */}
         <input
-          placeholder="Mobile"
-          className="input"
+          placeholder="Mobile Number"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
           required
           value={form.phone}
           onChange={(e) =>
@@ -80,33 +85,35 @@ export default function BookingForm({ data }: any) {
           }
         />
 
+        {/* EMAIL */}
         <input
-          placeholder="Email"
-          className="input"
+          placeholder="Email (optional)"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
           value={form.email}
           onChange={(e) =>
             setForm({ ...form, email: e.target.value })
           }
         />
 
+        {/* ADDRESS */}
         <input
           placeholder="Address / Landmark"
-          className="input"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
           value={form.address}
           onChange={(e) =>
             setForm({ ...form, address: e.target.value })
           }
         />
 
+        {/* BUTTON */}
         <button
           disabled={loading}
-          className="w-full bg-pink-500 text-white py-3 rounded-xl font-bold"
+          className="w-full bg-pink-500 text-white py-3 rounded-xl font-semibold hover:scale-105 transition duration-200 disabled:opacity-60"
         >
-          {loading ? "Sending..." : "Confirm Booking"}
+          {loading ? "Sending..." : "Confirm Booking 🚖"}
         </button>
 
       </form>
-
     </div>
   );
 }

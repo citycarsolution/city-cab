@@ -5,12 +5,13 @@ import {
   TileLayer,
   Marker,
   Polyline,
+  useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
-import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
+import { useEffect, useState } from "react";
 
-// 🔥 Marker fix
+// 🔥 marker fix
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -21,54 +22,59 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
-// 🚖 CAB ICON
+// 🚗 fake cab icon
 const cabIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/61/61168.png",
-  iconSize: [28, 28],
+  iconUrl:
+    "https://cdn-icons-png.flaticon.com/512/744/744465.png",
+  iconSize: [30, 30],
 });
 
 type Props = {
-  from: any;
-  to: any;
-  route: any[];
-  onPickupChange: (coords: any) => void;
+  from: { lat: number; lon: number };
+  to?: { lat: number; lon: number } | null;
+  route?: any[];
+  onPickupChange?: (coords: any) => void;
 };
+
+function DraggableMarker({ from, onChange }: any) {
+  const [pos, setPos] = useState(from);
+
+  useMapEvents({
+    dragend: () => {},
+  });
+
+  return (
+    <Marker
+      draggable
+      position={[pos.lat, pos.lon]}
+      eventHandlers={{
+        dragend: (e) => {
+          const latlng = e.target.getLatLng();
+          const newPos = { lat: latlng.lat, lon: latlng.lng };
+          setPos(newPos);
+          onChange && onChange(newPos);
+        },
+      }}
+    />
+  );
+}
 
 export default function MapView({
   from,
   to,
-  route,
+  route = [],
   onPickupChange,
 }: Props) {
   const [cabs, setCabs] = useState<any[]>([]);
 
-  // 🚖 CREATE RANDOM CABS
+  // 🚗 random moving cabs
   useEffect(() => {
-    if (!from) return;
-
-    const arr = Array.from({ length: 8 }).map(() => ({
+    const arr = Array.from({ length: 12 }).map(() => ({
       lat: from.lat + (Math.random() - 0.5) * 0.02,
       lon: from.lon + (Math.random() - 0.5) * 0.02,
     }));
-
     setCabs(arr);
   }, [from]);
-
-  // 🚖 MOVE CABS (LIVE)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCabs((prev) =>
-        prev.map((cab) => ({
-          lat: cab.lat + (Math.random() - 0.5) * 0.001,
-          lon: cab.lon + (Math.random() - 0.5) * 0.001,
-        }))
-      );
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!from) return null;
 
   return (
     <div className="w-full h-screen">
@@ -79,27 +85,18 @@ export default function MapView({
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {/* 📍 DRAGGABLE PICKUP */}
-        <Marker
-          position={[from.lat, from.lon]}
-          draggable
-          eventHandlers={{
-            dragend: (e: any) => {
-              const latlng = e.target.getLatLng();
-              onPickupChange({ lat: latlng.lat, lon: latlng.lng });
-            },
-          }}
-        />
+        {/* 📍 Pickup draggable */}
+        <DraggableMarker from={from} onChange={onPickupChange} />
 
-        {/* 📍 DROP */}
+        {/* 📍 Drop */}
         {to && <Marker position={[to.lat, to.lon]} />}
 
-        {/* 🛣 ROUTE */}
+        {/* 🛣 Route */}
         {route.length > 0 && (
           <Polyline positions={route} color="#ec4899" />
         )}
 
-        {/* 🚖 LIVE CABS */}
+        {/* 🚗 CABS */}
         {cabs.map((cab, i) => (
           <Marker
             key={i}

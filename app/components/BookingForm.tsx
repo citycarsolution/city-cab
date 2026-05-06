@@ -1,9 +1,10 @@
 "use client";
 
-import emailjs from "emailjs-com";
+import emailjs from "@emailjs/browser";
 import { useState } from "react";
 
 export default function BookingForm({ data }: any) {
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -12,27 +13,44 @@ export default function BookingForm({ data }: any) {
     address: "",
   });
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    emailjs.send(
-      "YOUR_SERVICE_ID",
-      "YOUR_TEMPLATE_ID",
-      {
-        car: data.car,
-        mode: data.mode,
-        price: data.price,
-        pickup: data.pickup,
-        drop: data.drop,
-        name: form.name,
-        phone: form.phone,
-        email: form.email,
-        address: form.address,
-      },
-      "YOUR_PUBLIC_KEY"
-    );
+    try {
+      setLoading(true);
 
-    alert("Booking Sent 🚖");
+      await emailjs.send(
+        "YOUR_SERVICE_ID", // 👉 replace
+        "YOUR_TEMPLATE_ID", // 👉 replace
+        {
+          car: data.car,
+          mode: data.mode,
+          price: data.price,
+          pickup: data.pickup,
+          drop: data.drop,
+          name: form.name,
+          phone: form.phone,
+          email: form.email,
+          address: form.address,
+        },
+        "YOUR_PUBLIC_KEY" // 👉 replace
+      );
+
+      alert("Booking Sent 🚖");
+
+      setForm({
+        name: "",
+        phone: "",
+        email: "",
+        address: "",
+      });
+
+    } catch (err) {
+      alert("Error sending booking ❌");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,30 +64,45 @@ export default function BookingForm({ data }: any) {
           placeholder="Name"
           className="input"
           required
-          onChange={(e)=>setForm({...form,name:e.target.value})}
+          value={form.name}
+          onChange={(e) =>
+            setForm({ ...form, name: e.target.value })
+          }
         />
 
         <input
           placeholder="Mobile"
           className="input"
           required
-          onChange={(e)=>setForm({...form,phone:e.target.value})}
+          value={form.phone}
+          onChange={(e) =>
+            setForm({ ...form, phone: e.target.value })
+          }
         />
 
         <input
           placeholder="Email"
           className="input"
-          onChange={(e)=>setForm({...form,email:e.target.value})}
+          value={form.email}
+          onChange={(e) =>
+            setForm({ ...form, email: e.target.value })
+          }
         />
 
         <input
           placeholder="Address / Landmark"
           className="input"
-          onChange={(e)=>setForm({...form,address:e.target.value})}
+          value={form.address}
+          onChange={(e) =>
+            setForm({ ...form, address: e.target.value })
+          }
         />
 
-        <button className="w-full bg-pink-500 text-white py-3 rounded-xl font-bold">
-          Confirm Booking
+        <button
+          disabled={loading}
+          className="w-full bg-pink-500 text-white py-3 rounded-xl font-bold"
+        >
+          {loading ? "Sending..." : "Confirm Booking"}
         </button>
 
       </form>

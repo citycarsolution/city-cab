@@ -366,7 +366,7 @@ export default function Hero() {
 
   return (
 
-    <section className="relative min-h-screen overflow-hidden">
+    <section className="relative h-screen overflow-hidden">
 
       {/* MAP */}
       {fromCoords && (
@@ -389,14 +389,12 @@ export default function Hero() {
         className="
           relative
           z-20
-          min-h-screen
+          h-full
           max-w-7xl
           mx-auto
-          px-3
-          sm:px-4
+          px-4
           flex
           items-center
-          py-10
         "
       >
 
@@ -487,9 +485,8 @@ export default function Hero() {
               className="
                 bg-white/92
                 backdrop-blur-xl
-                rounded-[28px]
-                p-4
-                sm:p-5
+                rounded-[32px]
+                p-5
                 shadow-2xl
               "
             >
@@ -499,17 +496,15 @@ export default function Hero() {
 
                 <h2
                   className="
-                    text-[42px]
-                    sm:text-3xl
+                    text-3xl
                     font-black
                     mb-1
-                    leading-none
                   "
                 >
                   Book Your Ride
                 </h2>
 
-                <p className="text-gray-500 text-lg sm:text-base">
+                <p className="text-gray-500">
                   Premium cab booking experience
                 </p>
               </div>
@@ -549,10 +544,9 @@ export default function Hero() {
                       setDuration("");
                     }}
                     className={`
-                      h-14
+                      h-12
                       rounded-2xl
-                      font-bold
-                      text-lg
+                      font-semibold
                       capitalize
                       transition-all
 
@@ -574,7 +568,7 @@ export default function Hero() {
                   flex
                   items-center
                   gap-3
-                  h-14
+                  h-12
                   px-4
                   rounded-2xl
                   bg-gray-100
@@ -583,7 +577,7 @@ export default function Hero() {
               >
 
                 <MapPin
-                  size={20}
+                  size={18}
                   className="text-pink-500"
                 />
 
@@ -594,7 +588,7 @@ export default function Hero() {
                     bg-transparent
                     w-full
                     outline-none
-                    text-base
+                    text-sm
                   "
                 />
               </div>
@@ -611,12 +605,12 @@ export default function Hero() {
                   }
                   className="
                     w-full
-                    h-14
+                    h-12
                     px-4
                     rounded-2xl
                     bg-gray-100
                     outline-none
-                    text-base
+                    text-sm
                     mb-3
                   "
                 >
@@ -640,7 +634,7 @@ export default function Hero() {
                       flex
                       items-center
                       gap-3
-                      h-14
+                      h-12
                       px-4
                       rounded-2xl
                       bg-gray-100
@@ -648,7 +642,7 @@ export default function Hero() {
                   >
 
                     <MapPin
-                      size={20}
+                      size={18}
                       className="text-pink-500"
                     />
 
@@ -668,7 +662,7 @@ export default function Hero() {
                         bg-transparent
                         w-full
                         outline-none
-                        text-base
+                        text-sm
                       "
                     />
                   </div>
@@ -744,7 +738,7 @@ export default function Hero() {
                   flex
                   items-center
                   gap-3
-                  h-14
+                  h-12
                   px-4
                   rounded-2xl
                   bg-gray-100
@@ -753,7 +747,7 @@ export default function Hero() {
               >
 
                 <CalendarDays
-                  size={20}
+                  size={18}
                   className="text-pink-500"
                 />
 
@@ -769,7 +763,7 @@ export default function Hero() {
                     bg-transparent
                     w-full
                     outline-none
-                    text-base
+                    text-sm
                   "
                 />
               </div>
@@ -802,8 +796,8 @@ export default function Hero() {
                 className="
                   grid
                   grid-cols-2
+                  md:grid-cols-4
                   gap-3
-                  mt-2
                 "
               >
 
@@ -831,10 +825,6 @@ export default function Hero() {
                         text-center
                         cursor-pointer
                         transition-all
-                        min-h-[170px]
-                        flex
-                        flex-col
-                        justify-center
 
                         ${
                           selectedCar === car
@@ -847,8 +837,7 @@ export default function Hero() {
                       <h3
                         className="
                           font-bold
-                          text-[22px]
-                          leading-none
+                          text-base
                         "
                       >
                         {car}
@@ -856,9 +845,9 @@ export default function Hero() {
 
                       <p
                         className="
-                          text-[13px]
+                          text-xs
                           text-gray-500
-                          mt-2
+                          mt-1
                         "
                       >
                         AC • 4+1 • 2 Bags
@@ -867,10 +856,9 @@ export default function Hero() {
                       <div
                         className="
                           text-pink-500
-                          text-[34px]
+                          text-2xl
                           font-black
-                          mt-3
-                          leading-none
+                          mt-2
                         "
                       >
                         ₹{price}
@@ -888,11 +876,10 @@ export default function Hero() {
                   onClick={handleBooking}
                   className="
                     w-full
-                    h-14
+                    h-12
                     rounded-2xl
                     mt-5
                     font-bold
-                    text-lg
                     text-white
                     bg-gradient-to-r
                     from-pink-500

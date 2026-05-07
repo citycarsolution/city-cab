@@ -51,7 +51,7 @@ export default function Hero() {
     );
   }, []);
 
-  // ⏱ TIME (+1 hour)
+  // ⏱ TIME (1 hour rule)
   useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
@@ -72,7 +72,7 @@ export default function Hero() {
     setDropSug(data);
   };
 
-  // 🚗 ROUTE
+  // 🚗 ROUTE + TIME (FIXED)
   const getRoute = async (from: any, to: any) => {
     if (!from || !to) return;
 
@@ -103,22 +103,26 @@ export default function Hero() {
   }, [mode, fromCoords]);
 
   const cars = ["WagonR", "Dzire", "Ertiga", "Innova"];
+
   const showCars = mode === "rent" || !!toCoords;
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden">
+    <div className="relative h-screen">
 
-      {/* 🗺 MAP */}
+      {/* MAP */}
       {fromCoords && (
         <div className="absolute inset-0 z-0">
-          <MapView from={fromCoords} to={toCoords} route={route} />
+          <MapView
+            from={fromCoords}
+            to={toCoords}
+            route={route}
+          />
         </div>
       )}
 
-      {/* 🔥 BOTTOM SHEET */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 p-3">
-
-        <div className="bg-white rounded-2xl p-4 shadow-xl max-h-[75dvh] overflow-y-auto pb-24">
+      {/* CARD */}
+     <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="bg-white rounded-2xl p-4 shadow-xl max-h-[80vh] overflow-auto">
 
           <h2 className="font-bold text-lg mb-2">Book Your Ride</h2>
 
@@ -191,7 +195,7 @@ export default function Hero() {
             </div>
           )}
 
-          {/* PACKAGE */}
+          {/* RENT PACKAGE */}
           {mode === "rent" && (
             <select
               value={pkg}
@@ -212,7 +216,7 @@ export default function Hero() {
             className="input mt-2"
           />
 
-          {/* DISTANCE */}
+          {/* DISTANCE + TIME */}
           {distance > 0 && mode !== "rent" && (
             <div className="text-sm text-gray-600 mb-2 flex gap-3">
               <span>🚗 {distance} km</span>
@@ -220,9 +224,9 @@ export default function Hero() {
             </div>
           )}
 
-          {/* 🚗 CARS LIST */}
+          {/* 🚗 CAR GRID */}
           {showCars && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
               {cars.map((car) => {
                 const price = calculateFare(distance, mode, car as any, pkg);
                 const isActive = selectedCar === car;
@@ -231,20 +235,19 @@ export default function Hero() {
                   <div
                     key={car}
                     onClick={() => setSelectedCar(car)}
-                    className={`cursor-pointer border rounded-xl p-4 flex justify-between items-center
+                    className={`cursor-pointer border rounded-xl p-3 text-center transition duration-200
                       ${isActive
-                        ? "border-pink-500 shadow-lg"
-                        : "hover:shadow-md"
+                        ? "border-pink-500 shadow-lg scale-105"
+                        : "hover:shadow-lg hover:scale-105"
                       }`}
                   >
-                    <div>
-                      <div className="font-semibold">{car}</div>
-                      <div className="text-xs text-gray-500">
-                        AC • 4+1 • 2 Bags
-                      </div>
+                    <div className="font-semibold text-sm">{car}</div>
+
+                    <div className="text-xs text-gray-500">
+                      AC • 4+1 • 2 Bags
                     </div>
 
-                    <div className="text-pink-500 font-bold text-lg">
+                    <div className="text-pink-500 font-bold mt-1 text-lg">
                       ₹{price}
                     </div>
                   </div>
@@ -257,7 +260,12 @@ export default function Hero() {
           {selectedCar && (
             <button
               onClick={() => {
-                const price = calculateFare(distance, mode, selectedCar as any, pkg);
+                const price = calculateFare(
+                  distance,
+                  mode,
+                  selectedCar as any,
+                  pkg
+                );
 
                 router.push(
                   `/booking?car=${selectedCar}&mode=${mode}&price=${price}&pickup=${encodeURIComponent(

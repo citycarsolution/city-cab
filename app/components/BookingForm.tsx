@@ -22,10 +22,15 @@ export default function BookingForm({
 
   const [form, setForm] =
     useState({
+
       name: "",
+
       phone: "",
+
       email: "",
+
       address: "",
+
       payment: "Cash",
     });
 
@@ -95,22 +100,33 @@ export default function BookingForm({
 
       setLoading(true);
 
+      // =====================
+      // SEND EMAIL
+      // =====================
       await emailjs.send(
 
+        // EMAILJS SERVICE ID
         "YOUR_SERVICE_ID",
 
+        // EMAILJS TEMPLATE ID
         "YOUR_TEMPLATE_ID",
 
         {
+
+          // ===================
+          // BOOKING DETAILS
+          // ===================
           car: data.car,
 
           mode: data.mode,
 
           price: data.price,
 
-          pickup: data.pickup,
+          pickup:
+            data.pickup,
 
-          drop: data.drop,
+          drop:
+            data.drop,
 
           distance:
             data.distance,
@@ -124,35 +140,61 @@ export default function BookingForm({
           bookingTime:
             data.bookingTime,
 
-          payment:
-            form.payment,
-
-          name: form.name,
+          // ===================
+          // USER DETAILS
+          // ===================
+          name:
+            form.name,
 
           phone:
             `+91 ${form.phone}`,
 
-          email: form.email,
+          email:
+            form.email,
 
           address:
             form.address,
+
+          payment:
+            form.payment,
+
+          // ===================
+          // RECEIVER
+          // ===================
+          to_email:
+            "webappseostudio@gmail.com",
         },
 
+        // EMAILJS PUBLIC KEY
         "YOUR_PUBLIC_KEY"
       );
 
+      // SUCCESS
       alert(
-        "Booking Sent Successfully 🚖"
+        "🎉 Booking Confirmed Successfully 🚖"
       );
 
       // RESET
       setForm({
+
         name: "",
+
         phone: "",
+
         email: "",
+
         address: "",
+
         payment: "Cash",
       });
+
+      // THANK YOU PAGE
+      setTimeout(() => {
+
+        window.location.href =
+          "/thank-you";
+
+      }, 3000);
 
     } catch (err) {
 
@@ -326,9 +368,16 @@ export default function BookingForm({
           <input
             type="email"
             required
+
+            // AUTO GMAIL SUGGEST
             autoComplete="email"
-            placeholder="Enter Gmail"
+
+            spellCheck={false}
+
+            placeholder="yourgmail@gmail.com"
+
             value={form.email}
+
             onChange={(e) =>
               setForm({
                 ...form,
@@ -336,6 +385,7 @@ export default function BookingForm({
                   e.target.value,
               })
             }
+
             className="
               bg-transparent
               w-full
@@ -365,9 +415,13 @@ export default function BookingForm({
 
           <input
             type="text"
+
             autoComplete="street-address"
+
             placeholder="Address / Landmark"
+
             value={form.address}
+
             onChange={(e) =>
               setForm({
                 ...form,
@@ -375,6 +429,7 @@ export default function BookingForm({
                   e.target.value,
               })
             }
+
             className="
               bg-transparent
               w-full

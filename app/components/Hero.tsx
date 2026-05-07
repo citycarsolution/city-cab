@@ -117,10 +117,19 @@ export default function Hero() {
       {/* DARK OVERLAY */}
       <div className="absolute inset-0 bg-black/20 z-10"></div>
 
-      {/* BOTTOM CARD */}
-      <div className="absolute bottom-0 left-0 w-full z-20 px-3 pb-20">
+      {/* 🔥 PERFECT BOTTOM SHEET */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
 
-        <div className="bg-white/95 backdrop-blur-xl rounded-t-3xl shadow-2xl p-4 w-full max-w-md mx-auto max-h-[75vh] overflow-y-auto border">
+        <div className="
+          w-full max-w-md
+          bg-white
+          rounded-t-3xl
+          shadow-2xl
+          p-4
+          max-h-[80vh]
+          overflow-y-auto
+          pb-[env(safe-area-inset-bottom)]
+        ">
 
           <h2 className="font-bold text-lg mb-3">Book Your Ride</h2>
 
@@ -156,7 +165,7 @@ export default function Hero() {
               />
 
               {dropSug.length > 0 && (
-                <div className="absolute bg-white border w-full z-[999] rounded-xl shadow max-h-40 overflow-y-auto">
+                <div className="absolute top-full bg-white border w-full z-[9999] rounded-xl shadow max-h-40 overflow-y-auto">
                   {dropSug.map((item, i) => (
                     <div
                       key={i}
@@ -209,9 +218,9 @@ export default function Hero() {
             </div>
           )}
 
-          {/* CARS */}
+          {/* CARS LIST (FIXED 🔥) */}
           {showCars && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {cars.map((car) => {
                 const price = calculateFare(distance, mode, car as any, pkg);
 
@@ -219,17 +228,20 @@ export default function Hero() {
                   <div
                     key={car}
                     onClick={() => setSelectedCar(car)}
-                    className={`bg-white border rounded-xl p-3 text-center shadow-sm transition ${
+                    className={`bg-white border rounded-xl p-4 flex justify-between items-center shadow-sm ${
                       selectedCar === car
-                        ? "border-pink-500 shadow-lg scale-105"
-                        : "hover:shadow-lg hover:scale-105"
+                        ? "border-pink-500 shadow-lg"
+                        : "hover:shadow-md"
                     }`}
                   >
-                    <div className="font-semibold">{car}</div>
-                    <div className="text-xs text-gray-500">
-                      AC • 4+1 • 2 Bags
+                    <div>
+                      <div className="font-semibold">{car}</div>
+                      <div className="text-xs text-gray-500">
+                        AC • 4+1 • 2 Bags
+                      </div>
                     </div>
-                    <div className="text-pink-500 font-bold mt-1">
+
+                    <div className="text-pink-500 font-bold text-lg">
                       ₹{price}
                     </div>
                   </div>

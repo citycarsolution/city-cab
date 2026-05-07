@@ -12,7 +12,7 @@ import {
 import { calculateFare } from "../utils/calculateFare";
 
 // =======================
-// MAP IMPORT
+// MAP
 // =======================
 const MapView = dynamic(
   () => import("./MapView"),
@@ -44,6 +44,9 @@ export default function Hero() {
 
   const [drop, setDrop] =
     useState("");
+
+  const [suggestions, setSuggestions] =
+    useState<any[]>([]);
 
   const [fromCoords, setFromCoords] =
     useState<any>(null);
@@ -78,7 +81,7 @@ export default function Hero() {
   ];
 
   // =======================
-  // GET CURRENT LOCATION
+  // LOCATION
   // =======================
   useEffect(() => {
 
@@ -116,7 +119,7 @@ export default function Hero() {
       }
     );
 
-    // default date
+    // default time
     const now = new Date();
 
     now.setHours(
@@ -130,7 +133,7 @@ export default function Hero() {
   }, []);
 
   // =======================
-  // ROUTE FUNCTION
+  // ROUTE
   // =======================
   const getRoute = async (
     from: any,
@@ -206,7 +209,7 @@ export default function Hero() {
   }, [mode, fromCoords]);
 
   // =======================
-  // SEARCH LOCATION
+  // SEARCH CITY
   // =======================
   const searchLocation = async (
     value: string
@@ -214,10 +217,11 @@ export default function Hero() {
 
     setDrop(value);
 
-    // reset
     if (
-      value.trim().length < 3
+      value.trim().length < 2
     ) {
+
+      setSuggestions([]);
 
       setDistance(0);
 
@@ -228,36 +232,16 @@ export default function Hero() {
 
     try {
 
-      // search city
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           value
-        )}&countrycodes=in&limit=1`
+        )}&countrycodes=in&limit=5`
       );
 
       const data =
         await res.json();
 
-      if (!data.length) return;
-
-      const destination = {
-
-        lat: Number(
-          data[0].lat
-        ),
-
-        lon: Number(
-          data[0].lon
-        ),
-      };
-
-      setToCoords(destination);
-
-      // get route
-      getRoute(
-        fromCoords,
-        destination
-      );
+      setSuggestions(data);
 
     } catch (err) {
 
@@ -398,7 +382,7 @@ export default function Hero() {
             <div
               className="
                 flex
-                gap-10
+                gap-8
                 mt-10
               "
             >
@@ -476,12 +460,12 @@ export default function Hero() {
             >
 
               {/* heading */}
-              <div className="mb-5">
+              <div className="mb-4">
 
                 <h2
                   className="
-                    text-3xl
-                    md:text-4xl
+                    text-2xl
+                    md:text-3xl
                     font-black
                     tracking-tight
                     mb-1
@@ -504,7 +488,7 @@ export default function Hero() {
                   grid
                   grid-cols-3
                   gap-3
-                  mb-5
+                  mb-4
                 "
               >
 
@@ -524,6 +508,10 @@ export default function Hero() {
 
                       setDrop("");
 
+                      setSuggestions(
+                        []
+                      );
+
                       setToCoords(
                         null
                       );
@@ -537,7 +525,7 @@ export default function Hero() {
                       );
                     }}
                     className={`
-                      h-12
+                      h-11
                       rounded-2xl
                       font-semibold
                       capitalize
@@ -546,7 +534,7 @@ export default function Hero() {
 
                       ${
                         mode === m
-                          ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg scale-[1.02]"
+                          ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg"
                           : "bg-gray-100 hover:bg-gray-200"
                       }
                     `}
@@ -559,7 +547,7 @@ export default function Hero() {
               {/* ===================
                   FORM
               =================== */}
-              <div className="space-y-4">
+              <div className="space-y-3">
 
                 {/* pickup */}
                 <div
@@ -567,20 +555,15 @@ export default function Hero() {
                     flex
                     items-center
                     gap-3
-                    h-12
+                    h-11
                     px-4
                     rounded-2xl
                     bg-gray-100/80
-                    border
-                    border-transparent
-                    focus-within:border-pink-500
-                    focus-within:bg-white
-                    transition-all
                   "
                 >
 
                   <MapPin
-                    size={18}
+                    size={16}
                     className="text-pink-500"
                   />
 
@@ -596,7 +579,7 @@ export default function Hero() {
                   />
                 </div>
 
-                {/* rent package */}
+                {/* RENT PACKAGE */}
                 {mode === "rent" ? (
 
                   <select
@@ -609,16 +592,12 @@ export default function Hero() {
                     }
                     className="
                       w-full
-                      h-12
+                      h-11
                       px-4
                       rounded-2xl
                       bg-gray-100/80
-                      border
-                      border-transparent
                       outline-none
-                      transition-all
-                      focus:border-pink-500
-                      focus:bg-white
+                      text-sm
                     "
                   >
 
@@ -634,68 +613,151 @@ export default function Hero() {
 
                 ) : (
 
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                      h-12
-                      px-4
-                      rounded-2xl
-                      bg-gray-100/80
-                      border
-                      border-pink-200
-                      focus-within:border-pink-500
-                      focus-within:bg-white
-                      transition-all
-                    "
-                  >
+                  <div className="relative">
 
-                    <MapPin
-                      size={18}
-                      className="text-pink-500"
-                    />
-
-                    <input
-                      value={drop}
-                      onChange={(e) =>
-                        searchLocation(
-                          e.target.value
-                        )
-                      }
-                      placeholder={
-                        mode ===
-                        "airport"
-                          ? "Mumbai Airport"
-                          : "Search city"
-                      }
+                    {/* input */}
+                    <div
                       className="
-                        bg-transparent
-                        w-full
-                        outline-none
-                        text-sm
+                        flex
+                        items-center
+                        gap-3
+                        h-11
+                        px-4
+                        rounded-2xl
+                        bg-gray-100/80
+                        border
+                        border-pink-200
+                        focus-within:border-pink-500
+                        focus-within:bg-white
+                        transition-all
                       "
-                    />
+                    >
+
+                      <MapPin
+                        size={16}
+                        className="text-pink-500"
+                      />
+
+                      <input
+                        value={drop}
+                        onChange={(e) =>
+                          searchLocation(
+                            e.target
+                              .value
+                          )
+                        }
+                        placeholder={
+                          mode ===
+                          "airport"
+                            ? "Mumbai Airport"
+                            : "Search city"
+                        }
+                        className="
+                          bg-transparent
+                          w-full
+                          outline-none
+                          text-sm
+                        "
+                      />
+                    </div>
+
+                    {/* suggestions */}
+                    {suggestions.length >
+                      0 && (
+
+                      <div
+                        className="
+                          absolute
+                          top-full
+                          left-0
+                          right-0
+                          bg-white
+                          border
+                          rounded-2xl
+                          shadow-2xl
+                          mt-2
+                          overflow-hidden
+                          z-50
+                          max-h-60
+                          overflow-y-auto
+                        "
+                      >
+
+                        {suggestions.map(
+                          (
+                            item: any,
+                            index
+                          ) => (
+
+                            <button
+                              key={index}
+                              onClick={() => {
+
+                                setDrop(
+                                  item.display_name
+                                );
+
+                                setSuggestions(
+                                  []
+                                );
+
+                                const destination =
+                                  {
+
+                                    lat: Number(
+                                      item.lat
+                                    ),
+
+                                    lon: Number(
+                                      item.lon
+                                    ),
+                                  };
+
+                                setToCoords(
+                                  destination
+                                );
+
+                                getRoute(
+                                  fromCoords,
+                                  destination
+                                );
+                              }}
+                              className="
+                                w-full
+                                text-left
+                                px-4
+                                py-3
+                                hover:bg-pink-50
+                                border-b
+                                text-sm
+                              "
+                            >
+                              {
+                                item.display_name
+                              }
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* date */}
+                {/* DATE */}
                 <div
                   className="
                     flex
                     items-center
                     gap-3
-                    h-12
+                    h-11
                     px-4
                     rounded-2xl
                     bg-gray-100/80
-                    border
-                    border-transparent
                   "
                 >
 
                   <CalendarDays
-                    size={18}
+                    size={16}
                     className="text-pink-500"
                   />
 
@@ -711,6 +773,7 @@ export default function Hero() {
                       bg-transparent
                       w-full
                       outline-none
+                      text-sm
                     "
                   />
                 </div>
@@ -730,7 +793,7 @@ export default function Hero() {
                     gap-2
                     bg-pink-50
                     text-pink-600
-                    px-4
+                    px-3
                     py-2
                     rounded-full
                     text-sm
@@ -750,8 +813,8 @@ export default function Hero() {
                   grid
                   grid-cols-2
                   md:grid-cols-4
-                  gap-4
-                  mt-6
+                  gap-3
+                  mt-5
                 "
               >
 
@@ -775,23 +838,22 @@ export default function Hero() {
                         )
                       }
                       className={`
-                        rounded-[24px]
+                        rounded-[22px]
                         border
                         border-gray-200
                         bg-white
-                        p-4
+                        p-3
                         text-center
                         cursor-pointer
                         transition-all
                         duration-300
-                        hover:shadow-2xl
-                        hover:-translate-y-1
+                        hover:shadow-xl
                         hover:border-pink-300
 
                         ${
                           selectedCar ===
                           car
-                            ? "border-pink-500 bg-gradient-to-br from-pink-50 to-rose-50 shadow-xl scale-[1.02]"
+                            ? "border-pink-500 bg-gradient-to-br from-pink-50 to-rose-50 shadow-xl"
                             : ""
                         }
                       `}
@@ -800,7 +862,7 @@ export default function Hero() {
                       <h3
                         className="
                           font-bold
-                          text-lg
+                          text-base
                         "
                       >
                         {car}
@@ -808,7 +870,7 @@ export default function Hero() {
 
                       <p
                         className="
-                          text-xs
+                          text-[11px]
                           text-gray-500
                           mt-1
                         "
@@ -823,9 +885,9 @@ export default function Hero() {
                           bg-gradient-to-r
                           from-pink-500
                           to-rose-500
-                          text-2xl
+                          text-xl
                           font-black
-                          mt-3
+                          mt-2
                         "
                       >
                         ₹{price}
@@ -837,7 +899,7 @@ export default function Hero() {
               </div>
 
               {/* ===================
-                  BOOK BUTTON
+                  BUTTON
               =================== */}
               {selectedCar && (
 
@@ -858,8 +920,8 @@ export default function Hero() {
                   }}
                   className="
                     w-full
-                    h-12
-                    mt-6
+                    h-11
+                    mt-5
                     rounded-2xl
                     font-bold
                     text-white
@@ -867,9 +929,7 @@ export default function Hero() {
                     from-pink-500
                     to-rose-500
                     hover:scale-[1.01]
-                    hover:shadow-2xl
                     transition-all
-                    duration-300
                   "
                 >
                   Book {selectedCar}

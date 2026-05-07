@@ -30,7 +30,7 @@ export const pricing = {
       Innova: 25,
     },
     minKm: 100,
-    driverAllowance: 300,
+    driverAllowance: 150,
   },
 
   airport: {

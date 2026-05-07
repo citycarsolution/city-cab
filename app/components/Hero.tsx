@@ -47,11 +47,11 @@ export default function Hero() {
         setPickup(data.display_name);
       },
       () => setPickup("Location not allowed"),
-      { enableHighAccuracy: true, timeout: 5000 }
+      { enableHighAccuracy: true }
     );
   }, []);
 
-  // ⏱ TIME (1 hour rule)
+  // ⏱ TIME (+1 hour)
   useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
@@ -72,7 +72,7 @@ export default function Hero() {
     setDropSug(data);
   };
 
-  // 🚗 ROUTE + TIME (FIXED)
+  // 🚗 ROUTE
   const getRoute = async (from: any, to: any) => {
     if (!from || !to) return;
 
@@ -107,27 +107,27 @@ export default function Hero() {
   const showCars = mode === "rent" || !!toCoords;
 
   return (
-    <div className="relative h-screen">
+    <div className="relative h-screen overflow-hidden">
 
       {/* MAP */}
       {fromCoords && (
         <div className="absolute inset-0 z-0">
-          <MapView
-            from={fromCoords}
-            to={toCoords}
-            route={route}
-          />
+          <MapView from={fromCoords} to={toCoords} route={route} />
         </div>
       )}
 
-      {/* CARD */}
-      <div className="absolute bottom-0 w-full p-3 z-10">
-        <div className="bg-white rounded-2xl p-4 shadow-xl max-h-[80vh] overflow-auto">
+      {/* 🔥 GLASS OVERLAY */}
+      <div className="absolute inset-0 bg-black/10 z-0"></div>
 
-          <h2 className="font-bold text-lg mb-2">Book Your Ride</h2>
+      {/* CARD */}
+      <div className="absolute bottom-0 w-full z-10 px-3 pb-4">
+
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-4 max-h-[75vh] overflow-auto">
+
+          <h2 className="font-bold text-lg mb-3">Book Your Ride</h2>
 
           {/* MODE */}
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-3">
             {["rent", "oneway", "airport"].map((m) => (
               <button
                 key={m}
@@ -140,8 +140,10 @@ export default function Hero() {
                   setDuration(0);
                   setSelectedCar(null);
                 }}
-                className={`flex-1 py-2 rounded-lg ${
-                  mode === m ? "bg-pink-500 text-white" : "border"
+                className={`flex-1 py-2 rounded-xl text-sm font-medium ${
+                  mode === m
+                    ? "bg-pink-500 text-white shadow"
+                    : "border bg-white"
                 }`}
               >
                 {m}
@@ -150,11 +152,11 @@ export default function Hero() {
           </div>
 
           {/* PICKUP */}
-          <input value={pickup} readOnly className="input bg-gray-100" />
+          <input value={pickup} readOnly className="input bg-gray-100 mb-2" />
 
           {/* DROP */}
           {mode !== "rent" && (
-            <div className="relative">
+            <div className="relative mb-2">
               <input
                 value={drop}
                 onChange={(e) => {
@@ -166,7 +168,7 @@ export default function Hero() {
               />
 
               {dropSug.length > 0 && (
-                <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-lg shadow">
+                <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-xl shadow-lg">
                   {dropSug.map((item, i) => (
                     <div
                       key={i}
@@ -195,12 +197,12 @@ export default function Hero() {
             </div>
           )}
 
-          {/* RENT PACKAGE */}
+          {/* PACKAGE */}
           {mode === "rent" && (
             <select
               value={pkg}
               onChange={(e) => setPkg(e.target.value as any)}
-              className="input"
+              className="input mb-2"
             >
               <option value="8hr/80km">8hr / 80km</option>
               <option value="12hr/120km">12hr / 120km</option>
@@ -213,10 +215,10 @@ export default function Hero() {
             value={rideTime}
             min={rideTime}
             onChange={(e) => setRideTime(e.target.value)}
-            className="input mt-2"
+            className="input mb-2"
           />
 
-          {/* DISTANCE + TIME */}
+          {/* DISTANCE */}
           {distance > 0 && mode !== "rent" && (
             <div className="text-sm text-gray-600 mb-2 flex gap-3">
               <span>🚗 {distance} km</span>
@@ -226,7 +228,7 @@ export default function Hero() {
 
           {/* 🚗 CAR GRID */}
           {showCars && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <div className="grid grid-cols-2 gap-3 mt-3">
               {cars.map((car) => {
                 const price = calculateFare(distance, mode, car as any, pkg);
                 const isActive = selectedCar === car;
@@ -235,11 +237,12 @@ export default function Hero() {
                   <div
                     key={car}
                     onClick={() => setSelectedCar(car)}
-                    className={`cursor-pointer border rounded-xl p-3 text-center transition duration-200
-                      ${isActive
+                    className={`cursor-pointer border rounded-2xl p-3 text-center transition duration-200
+                    ${
+                      isActive
                         ? "border-pink-500 shadow-lg scale-105"
-                        : "hover:shadow-lg hover:scale-105"
-                      }`}
+                        : "bg-white hover:shadow-lg hover:scale-105"
+                    }`}
                   >
                     <div className="font-semibold text-sm">{car}</div>
 
@@ -256,7 +259,7 @@ export default function Hero() {
             </div>
           )}
 
-          {/* BOOK BUTTON */}
+          {/* BUTTON */}
           {selectedCar && (
             <button
               onClick={() => {
@@ -278,7 +281,6 @@ export default function Hero() {
               Book {selectedCar}
             </button>
           )}
-
         </div>
       </div>
     </div>

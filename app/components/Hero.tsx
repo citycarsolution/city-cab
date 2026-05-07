@@ -78,7 +78,7 @@ export default function Hero() {
   ];
 
   // =======================
-  // GET LOCATION
+  // GET CURRENT LOCATION
   // =======================
   useEffect(() => {
 
@@ -116,6 +116,7 @@ export default function Hero() {
       }
     );
 
+    // default date
     const now = new Date();
 
     now.setHours(
@@ -129,38 +130,50 @@ export default function Hero() {
   }, []);
 
   // =======================
-  // GET ROUTE
+  // ROUTE FUNCTION
   // =======================
   const getRoute = async (
     from: any,
     to: any
   ) => {
 
-    if (!from || !to) return;
+    try {
 
-    const res = await fetch(
-      `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
-    );
+      const res = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
+      );
 
-    const data =
-      await res.json();
+      const data =
+        await res.json();
 
-    const r =
-      data.routes?.[0];
+      const r =
+        data.routes?.[0];
 
-    if (!r) return;
+      if (!r) return;
 
-    setDistance(
-      Number(
-        (r.distance / 1000).toFixed(1)
-      )
-    );
+      // distance
+      setDistance(
+        Number(
+          (
+            r.distance / 1000
+          ).toFixed(1)
+        )
+      );
 
-    setRoute(
-      r.geometry.coordinates.map(
-        (c: any) => [c[1], c[0]]
-      )
-    );
+      // route line
+      setRoute(
+        r.geometry.coordinates.map(
+          (c: any) => [
+            c[1],
+            c[0],
+          ]
+        )
+      );
+
+    } catch (err) {
+
+      console.log(err);
+    }
   };
 
   // =======================
@@ -195,42 +208,62 @@ export default function Hero() {
   // =======================
   // SEARCH LOCATION
   // =======================
-  const searchLocation =
-    async (value: string) => {
+  const searchLocation = async (
+    value: string
+  ) => {
 
-      setDrop(value);
+    setDrop(value);
 
-      if (value.length < 3)
-        return;
+    // reset
+    if (
+      value.trim().length < 3
+    ) {
 
+      setDistance(0);
+
+      setRoute([]);
+
+      return;
+    }
+
+    try {
+
+      // search city
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          value + ", India"
-        )}&limit=1`
+          value
+        )}&countrycodes=in&limit=1`
       );
 
       const data =
         await res.json();
 
-      if (!data[0]) return;
+      if (!data.length) return;
 
-      const to = {
-        lat: parseFloat(
+      const destination = {
+
+        lat: Number(
           data[0].lat
         ),
 
-        lon: parseFloat(
+        lon: Number(
           data[0].lon
         ),
       };
 
-      setToCoords(to);
+      setToCoords(destination);
 
+      // get route
       getRoute(
         fromCoords,
-        to
+        destination
       );
-    };
+
+    } catch (err) {
+
+      console.log(err);
+    }
+  };
 
   return (
 
@@ -285,17 +318,18 @@ export default function Hero() {
           className="
             grid
             lg:grid-cols-2
-            gap-12
+            gap-8
             items-center
             w-full
           "
         >
 
           {/* ===================
-              LEFT CONTENT
+              LEFT SIDE
           =================== */}
           <div className="hidden lg:block text-white">
 
+            {/* badge */}
             <div
               className="
                 inline-flex
@@ -318,9 +352,10 @@ export default function Hero() {
               </span>
             </div>
 
+            {/* title */}
             <h1
               className="
-                text-6xl
+                text-5xl
                 font-black
                 leading-tight
               "
@@ -341,6 +376,7 @@ export default function Hero() {
               </span>
             </h1>
 
+            {/* subtitle */}
             <p
               className="
                 mt-6
@@ -350,11 +386,12 @@ export default function Hero() {
                 leading-8
               "
             >
-              Book city rides, airport
-              transfers and outstation
-              trips with real-time map
-              tracking and premium cab
-              experience.
+              Book city rides,
+              airport transfers
+              and outstation trips
+              with real-time map
+              tracking and premium
+              cab experience.
             </p>
 
             {/* stats */}
@@ -420,7 +457,7 @@ export default function Hero() {
           <div
             className="
               w-full
-              max-w-2xl
+              max-w-xl
               lg:ml-auto
             "
           >
@@ -433,12 +470,12 @@ export default function Hero() {
                 border-white/20
                 rounded-[32px]
                 shadow-[0_20px_80px_rgba(0,0,0,0.35)]
-                p-5
-                md:p-6
+                p-4
+                md:p-5
               "
             >
 
-              {/* title */}
+              {/* heading */}
               <div className="mb-5">
 
                 <h2
@@ -459,7 +496,9 @@ export default function Hero() {
                 </p>
               </div>
 
-              {/* mode buttons */}
+              {/* ===================
+                  MODE BUTTONS
+              =================== */}
               <div
                 className="
                   grid
@@ -517,7 +556,9 @@ export default function Hero() {
                 ))}
               </div>
 
-              {/* form */}
+              {/* ===================
+                  FORM
+              =================== */}
               <div className="space-y-4">
 
                 {/* pickup */}
@@ -526,15 +567,14 @@ export default function Hero() {
                     flex
                     items-center
                     gap-3
-                    h-14
-                    px-5
+                    h-12
+                    px-4
                     rounded-2xl
                     bg-gray-100/80
                     border
                     border-transparent
                     focus-within:border-pink-500
                     focus-within:bg-white
-                    focus-within:shadow-lg
                     transition-all
                   "
                 >
@@ -569,8 +609,8 @@ export default function Hero() {
                     }
                     className="
                       w-full
-                      h-14
-                      px-5
+                      h-12
+                      px-4
                       rounded-2xl
                       bg-gray-100/80
                       border
@@ -579,7 +619,6 @@ export default function Hero() {
                       transition-all
                       focus:border-pink-500
                       focus:bg-white
-                      focus:shadow-lg
                     "
                   >
 
@@ -600,15 +639,14 @@ export default function Hero() {
                       flex
                       items-center
                       gap-3
-                      h-14
-                      px-5
+                      h-12
+                      px-4
                       rounded-2xl
                       bg-gray-100/80
                       border
-                      border-transparent
+                      border-pink-200
                       focus-within:border-pink-500
                       focus-within:bg-white
-                      focus-within:shadow-lg
                       transition-all
                     "
                   >
@@ -629,7 +667,7 @@ export default function Hero() {
                         mode ===
                         "airport"
                           ? "Mumbai Airport"
-                          : "Enter destination"
+                          : "Search city"
                       }
                       className="
                         bg-transparent
@@ -647,16 +685,12 @@ export default function Hero() {
                     flex
                     items-center
                     gap-3
-                    h-14
-                    px-5
+                    h-12
+                    px-4
                     rounded-2xl
                     bg-gray-100/80
                     border
                     border-transparent
-                    focus-within:border-pink-500
-                    focus-within:bg-white
-                    focus-within:shadow-lg
-                    transition-all
                   "
                 >
 
@@ -682,7 +716,9 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* distance */}
+              {/* ===================
+                  DISTANCE
+              =================== */}
               {distance > 0 &&
                 mode !== "rent" && (
 
@@ -701,11 +737,14 @@ export default function Hero() {
                     font-medium
                   "
                 >
-                  🚗 {distance} km route
+                  🚗 {distance} km
+                  route
                 </div>
               )}
 
-              {/* cars */}
+              {/* ===================
+                  CARS
+              =================== */}
               <div
                 className="
                   grid
@@ -797,7 +836,9 @@ export default function Hero() {
                 })}
               </div>
 
-              {/* button */}
+              {/* ===================
+                  BOOK BUTTON
+              =================== */}
               {selectedCar && (
 
                 <button
@@ -817,7 +858,7 @@ export default function Hero() {
                   }}
                   className="
                     w-full
-                    h-14
+                    h-12
                     mt-6
                     rounded-2xl
                     font-bold

@@ -32,21 +32,26 @@ export default function Hero() {
 
   // 📍 LOCATION
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-      setFromCoords({ lat, lon });
+        setFromCoords({ lat, lon });
 
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-      );
-      const data = await res.json();
-      setPickup(data.display_name);
-    });
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        );
+        const data = await res.json();
+
+        setPickup(data.display_name);
+      },
+      () => setPickup("Location not allowed"),
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
   }, []);
 
-  // ⏱ TIME
+  // ⏱ TIME (1 hour rule)
   useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
@@ -58,13 +63,16 @@ export default function Hero() {
     if (q.length < 3) return;
 
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=5`
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        q + ", India"
+      )}&limit=5`
     );
+
     const data = await res.json();
     setDropSug(data);
   };
 
-  // 🚗 ROUTE
+  // 🚗 ROUTE + TIME (FIXED)
   const getRoute = async (from: any, to: any) => {
     if (!from || !to) return;
 
@@ -83,10 +91,11 @@ export default function Hero() {
     setRoute(coords);
   };
 
-  // ✈️ AIRPORT
+  // ✈️ AIRPORT AUTO
   useEffect(() => {
     if (mode === "airport" && fromCoords) {
       const airport = { lat: 19.0896, lon: 72.8656 };
+
       setDrop("Mumbai Airport");
       setToCoords(airport);
       getRoute(fromCoords, airport);
@@ -94,6 +103,7 @@ export default function Hero() {
   }, [mode, fromCoords]);
 
   const cars = ["WagonR", "Dzire", "Ertiga", "Innova"];
+
   const showCars = mode === "rent" || !!toCoords;
 
   return (
@@ -102,20 +112,22 @@ export default function Hero() {
       {/* MAP */}
       {fromCoords && (
         <div className="absolute inset-0 z-0">
-          <MapView from={fromCoords} to={toCoords} route={route} />
+          <MapView
+            from={fromCoords}
+            to={toCoords}
+            route={route}
+          />
         </div>
       )}
 
-      {/* GLASS CARD */}
+      {/* CARD */}
       <div className="absolute bottom-0 w-full p-3 z-10">
-        <div className="bg-white/90 backdrop-blur rounded-2xl p-4 shadow-2xl max-h-[80vh] overflow-auto border">
+        <div className="bg-white rounded-2xl p-4 shadow-xl max-h-[80vh] overflow-auto">
 
-          <h2 className="font-bold text-lg mb-2 text-center">
-            🚖 Book Your Ride
-          </h2>
+          <h2 className="font-bold text-lg mb-2">Book Your Ride</h2>
 
           {/* MODE */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-2">
             {["rent", "oneway", "airport"].map((m) => (
               <button
                 key={m}
@@ -128,10 +140,8 @@ export default function Hero() {
                   setDuration(0);
                   setSelectedCar(null);
                 }}
-                className={`flex-1 py-2 rounded-xl text-sm font-medium transition ${
-                  mode === m
-                    ? "bg-pink-500 text-white shadow"
-                    : "bg-gray-100"
+                className={`flex-1 py-2 rounded-lg ${
+                  mode === m ? "bg-pink-500 text-white" : "border"
                 }`}
               >
                 {m}
@@ -139,9 +149,10 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* INPUTS */}
+          {/* PICKUP */}
           <input value={pickup} readOnly className="input bg-gray-100" />
 
+          {/* DROP */}
           {mode !== "rent" && (
             <div className="relative">
               <input
@@ -150,25 +161,30 @@ export default function Hero() {
                   setDrop(e.target.value);
                   searchPlace(e.target.value);
                 }}
-                placeholder="Enter Drop"
+                placeholder="Enter Drop Location"
                 className="input"
               />
 
               {dropSug.length > 0 && (
-                <div className="absolute z-50 bg-white w-full rounded-xl shadow-lg max-h-40 overflow-auto mt-1">
+                <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-lg shadow">
                   {dropSug.map((item, i) => (
                     <div
                       key={i}
                       className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                      onClick={() => {
+                      onClick={async () => {
+                        setDrop(item.display_name);
+                        setDropSug([]);
+
                         const to = {
                           lat: parseFloat(item.lat),
                           lon: parseFloat(item.lon),
                         };
-                        setDrop(item.display_name);
+
                         setToCoords(to);
-                        setDropSug([]);
-                        getRoute(fromCoords, to);
+
+                        if (fromCoords) {
+                          await getRoute(fromCoords, to);
+                        }
                       }}
                     >
                       {item.display_name}
@@ -179,7 +195,7 @@ export default function Hero() {
             </div>
           )}
 
-          {/* PACKAGE */}
+          {/* RENT PACKAGE */}
           {mode === "rent" && (
             <select
               value={pkg}
@@ -200,33 +216,38 @@ export default function Hero() {
             className="input mt-2"
           />
 
-          {/* DISTANCE */}
+          {/* DISTANCE + TIME */}
           {distance > 0 && mode !== "rent" && (
-            <div className="bg-gray-100 p-2 rounded-lg text-sm flex justify-between mt-2">
+            <div className="text-sm text-gray-600 mb-2 flex gap-3">
               <span>🚗 {distance} km</span>
               <span>⏱ {duration} min</span>
             </div>
           )}
 
-          {/* CAR GRID */}
+          {/* 🚗 CAR GRID */}
           {showCars && (
-            <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
               {cars.map((car) => {
                 const price = calculateFare(distance, mode, car as any, pkg);
-                const active = selectedCar === car;
+                const isActive = selectedCar === car;
 
                 return (
                   <div
                     key={car}
                     onClick={() => setSelectedCar(car)}
-                    className={`cursor-pointer bg-white border rounded-xl p-3 text-center transition ${
-                      active
+                    className={`cursor-pointer border rounded-xl p-3 text-center transition duration-200
+                      ${isActive
                         ? "border-pink-500 shadow-lg scale-105"
-                        : "hover:shadow-md"
-                    }`}
+                        : "hover:shadow-lg hover:scale-105"
+                      }`}
                   >
                     <div className="font-semibold text-sm">{car}</div>
-                    <div className="text-pink-500 font-bold mt-1">
+
+                    <div className="text-xs text-gray-500">
+                      AC • 4+1 • 2 Bags
+                    </div>
+
+                    <div className="text-pink-500 font-bold mt-1 text-lg">
                       ₹{price}
                     </div>
                   </div>
@@ -247,14 +268,17 @@ export default function Hero() {
                 );
 
                 router.push(
-                  `/booking?car=${selectedCar}&mode=${mode}&price=${price}&pickup=${pickup}&drop=${drop}&distance=${distance}`
+                  `/booking?car=${selectedCar}&mode=${mode}&price=${price}&pickup=${encodeURIComponent(
+                    pickup
+                  )}&drop=${encodeURIComponent(drop)}&distance=${distance}`
                 );
               }}
-              className="w-full mt-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition"
+              className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold text-lg shadow-lg"
             >
               Book {selectedCar}
             </button>
           )}
+
         </div>
       </div>
     </div>

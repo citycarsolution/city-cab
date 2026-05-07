@@ -20,21 +20,21 @@ const serviceData: any = {
       extraKm: 13,
       extraHr: 130,
       seats: "4+1",
-      bags: 2,
+      bags: 1,
     },
 
     rent: {
       extraKm: 13,
       extraHr: 130,
       seats: "4+1",
-      bags: 2,
+      bags: 1,
     },
 
     airport: {
       extraKm: 13,
       extraHr: 130,
       seats: "4+1",
-      bags: 2,
+      bags: 1,
     },
   },
 

@@ -1,4 +1,24 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 export default function ThankYouPage() {
+
+  const router = useRouter();
+
+  // AUTO REDIRECT AFTER 7 SECONDS
+  useEffect(() => {
+
+    const timer = setTimeout(() => {
+
+      router.push("/");
+
+    }, 7000);
+
+    return () => clearTimeout(timer);
+
+  }, [router]);
 
   return (
 
@@ -27,10 +47,11 @@ export default function ThankYouPage() {
           text-center
           max-w-md
           w-full
+          shadow-2xl
         "
       >
 
-        <div className="text-6xl mb-5">
+        <div className="text-6xl mb-5 animate-bounce">
           🚖
         </div>
 
@@ -63,6 +84,16 @@ export default function ThankYouPage() {
         >
           Driver will contact you soon.
         </p>
+
+        <div
+          className="
+            mt-6
+            text-sm
+            text-white/70
+          "
+        >
+          Redirecting to home page in 7 seconds...
+        </div>
 
       </div>
     </div>

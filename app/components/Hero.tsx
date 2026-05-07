@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+
 import {
   MapPin,
   CalendarDays,
@@ -84,7 +85,7 @@ export default function Hero() {
   ];
 
   // =======================
-  // GET LOCATION
+  // GET USER LOCATION
   // =======================
   useEffect(() => {
 
@@ -103,19 +104,29 @@ export default function Hero() {
           lon,
         });
 
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-        );
+        try {
 
-        const data =
-          await res.json();
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+          );
 
-        setPickup(
-          data.display_name
-        );
+          const data =
+            await res.json();
+
+          setPickup(
+            data.display_name
+          );
+
+        } catch {
+
+          setPickup(
+            "Current Location"
+          );
+        }
       },
 
       () => {
+
         setPickup(
           "Location access denied"
         );
@@ -123,29 +134,18 @@ export default function Hero() {
     );
 
     // =======================
-    // INDIA CURRENT TIME +1 HOUR
+    // DEFAULT BOOKING TIME
     // =======================
     const now = new Date();
 
-    const indiaTime =
-      new Date(
-        now.toLocaleString(
-          "en-US",
-          {
-            timeZone:
-              "Asia/Kolkata",
-          }
-        )
-      );
-
-    indiaTime.setHours(
-      indiaTime.getHours() + 1
+    now.setHours(
+      now.getHours() + 1
     );
 
     const formatted =
       new Date(
-        indiaTime.getTime() -
-          indiaTime.getTimezoneOffset() *
+        now.getTime() -
+          now.getTimezoneOffset() *
             60000
       )
         .toISOString()
@@ -156,7 +156,7 @@ export default function Hero() {
   }, []);
 
   // =======================
-  // GET ROUTE
+  // ROUTE API
   // =======================
   const getRoute = async (
     from: any,
@@ -177,20 +177,17 @@ export default function Hero() {
 
       if (!r) return;
 
-      // =======================
       // DISTANCE
-      // =======================
-      setDistance(
+      const km =
         Number(
           (
             r.distance / 1000
           ).toFixed(1)
-        )
-      );
+        );
 
-      // =======================
+      setDistance(km);
+
       // DURATION
-      // =======================
       const totalMinutes =
         Math.ceil(
           r.duration / 60
@@ -217,9 +214,7 @@ export default function Hero() {
         );
       }
 
-      // =======================
-      // ROUTE LINE
-      // =======================
+      // ROUTE
       setRoute(
         r.geometry.coordinates.map(
           (c: any) => [
@@ -265,7 +260,7 @@ export default function Hero() {
   }, [mode, fromCoords]);
 
   // =======================
-  // SEARCH CITY
+  // SEARCH LOCATION
   // =======================
   const searchLocation = async (
     value: string
@@ -278,12 +273,6 @@ export default function Hero() {
     ) {
 
       setSuggestions([]);
-
-      setDistance(0);
-
-      setDuration("");
-
-      setRoute([]);
 
       return;
     }
@@ -307,13 +296,79 @@ export default function Hero() {
     }
   };
 
+  // =======================
+  // BOOK NOW
+  // =======================
+  const handleBooking = () => {
+
+    if (!selectedCar) {
+
+      alert(
+        "Please select cab"
+      );
+
+      return;
+    }
+
+    const price =
+      calculateFare(
+        distance,
+        mode,
+        selectedCar as any,
+        pkg
+      );
+
+    const bookingDate =
+      rideTime.split("T")[0];
+
+    const bookingTime =
+      rideTime.split("T")[1];
+
+    router.push(
+
+      `/booking
+
+      ?car=${encodeURIComponent(
+        selectedCar
+      )}
+
+      &mode=${encodeURIComponent(
+        mode
+      )}
+
+      &price=${price}
+
+      &pickup=${encodeURIComponent(
+        pickup
+      )}
+
+      &drop=${encodeURIComponent(
+        drop || "N/A"
+      )}
+
+      &distance=${distance}
+
+      &duration=${encodeURIComponent(
+        duration || "N/A"
+      )}
+
+      &bookingDate=${encodeURIComponent(
+        bookingDate
+      )}
+
+      &bookingTime=${encodeURIComponent(
+        bookingTime
+      )}`
+
+        .replace(/\s+/g, "")
+    );
+  };
+
   return (
 
     <section className="relative h-screen overflow-hidden">
 
-      {/* ===================
-          MAP
-      =================== */}
+      {/* MAP */}
       {fromCoords && (
 
         <div className="absolute inset-0">
@@ -325,24 +380,11 @@ export default function Hero() {
             mode={mode}
           />
 
-          {/* overlay */}
-          <div
-            className="
-              absolute
-              inset-0
-              bg-gradient-to-t
-              from-black/70
-              via-black/30
-              to-black/10
-              z-[1]
-            "
-          />
+          <div className="absolute inset-0 bg-black/45 z-[1]" />
         </div>
       )}
 
-      {/* ===================
-          CONTENT
-      =================== */}
+      {/* CONTENT */}
       <div
         className="
           relative
@@ -366,19 +408,15 @@ export default function Hero() {
           "
         >
 
-          {/* ===================
-              LEFT SIDE
-          =================== */}
+          {/* LEFT */}
           <div className="hidden lg:block text-white">
 
-            {/* badge */}
             <div
               className="
                 inline-flex
                 items-center
                 gap-2
                 bg-white/10
-                backdrop-blur-md
                 border
                 border-white/20
                 px-5
@@ -394,15 +432,15 @@ export default function Hero() {
               </span>
             </div>
 
-            {/* title */}
             <h1
               className="
-                text-5xl
+                text-6xl
                 font-black
                 leading-tight
               "
             >
               Ride Smarter
+
               <br />
 
               <span
@@ -418,84 +456,23 @@ export default function Hero() {
               </span>
             </h1>
 
-            {/* subtitle */}
             <p
               className="
                 mt-6
                 text-lg
                 text-white/70
-                max-w-xl
                 leading-8
+                max-w-xl
               "
             >
               Book city rides,
               airport transfers
               and outstation trips
-              with real-time map
-              tracking and premium
-              cab experience.
+              with real-time map tracking.
             </p>
-
-            {/* stats */}
-            <div
-              className="
-                flex
-                gap-8
-                mt-10
-              "
-            >
-
-              <div>
-                <h3
-                  className="
-                    text-4xl
-                    font-bold
-                  "
-                >
-                  500+
-                </h3>
-
-                <p className="text-white/60">
-                  Daily Trips
-                </p>
-              </div>
-
-              <div>
-                <h3
-                  className="
-                    text-4xl
-                    font-bold
-                  "
-                >
-                  24/7
-                </h3>
-
-                <p className="text-white/60">
-                  Live Support
-                </p>
-              </div>
-
-              <div>
-                <h3
-                  className="
-                    text-4xl
-                    font-bold
-                  "
-                >
-                  100%
-                </h3>
-
-                <p className="text-white/60">
-                  Safe Ride
-                </p>
-              </div>
-
-            </div>
           </div>
 
-          {/* ===================
-              BOOKING CARD
-          =================== */}
+          {/* RIGHT CARD */}
           <div
             className="
               w-full
@@ -506,26 +483,21 @@ export default function Hero() {
 
             <div
               className="
-                bg-white/90
-                backdrop-blur-2xl
-                border
-                border-white/20
+                bg-white/92
+                backdrop-blur-xl
                 rounded-[32px]
-                shadow-[0_20px_80px_rgba(0,0,0,0.35)]
-                p-4
-                md:p-5
+                p-5
+                shadow-2xl
               "
             >
 
-              {/* heading */}
-              <div className="mb-4">
+              {/* HEADER */}
+              <div className="mb-5">
 
                 <h2
                   className="
-                    text-2xl
-                    md:text-3xl
+                    text-3xl
                     font-black
-                    tracking-tight
                     mb-1
                   "
                 >
@@ -533,14 +505,11 @@ export default function Hero() {
                 </h2>
 
                 <p className="text-gray-500">
-                  Premium cab booking
-                  experience
+                  Premium cab booking experience
                 </p>
               </div>
 
-              {/* ===================
-                  MODE BUTTONS
-              =================== */}
+              {/* MODES */}
               <div
                 className="
                   grid
@@ -566,36 +535,25 @@ export default function Hero() {
 
                       setDrop("");
 
-                      setSuggestions(
-                        []
-                      );
+                      setSuggestions([]);
 
-                      setToCoords(
-                        null
-                      );
-
-                      setRoute([]);
+                      setSelectedCar("");
 
                       setDistance(0);
 
                       setDuration("");
-
-                      setSelectedCar(
-                        ""
-                      );
                     }}
                     className={`
-                      h-11
+                      h-12
                       rounded-2xl
                       font-semibold
                       capitalize
                       transition-all
-                      duration-300
 
                       ${
                         mode === m
                           ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg"
-                          : "bg-gray-100 hover:bg-gray-200"
+                          : "bg-gray-100"
                       }
                     `}
                   >
@@ -604,277 +562,242 @@ export default function Hero() {
                 ))}
               </div>
 
-              {/* ===================
-                  FORM
-              =================== */}
-              <div className="space-y-3">
+              {/* PICKUP */}
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  h-12
+                  px-4
+                  rounded-2xl
+                  bg-gray-100
+                  mb-3
+                "
+              >
 
-                {/* pickup */}
-                <div
+                <MapPin
+                  size={18}
+                  className="text-pink-500"
+                />
+
+                <input
+                  value={pickup}
+                  readOnly
                   className="
-                    flex
-                    items-center
-                    gap-3
-                    h-11
+                    bg-transparent
+                    w-full
+                    outline-none
+                    text-sm
+                  "
+                />
+              </div>
+
+              {/* RENT / DROP */}
+              {mode === "rent" ? (
+
+                <select
+                  value={pkg}
+                  onChange={(e) =>
+                    setPkg(
+                      e.target.value as any
+                    )
+                  }
+                  className="
+                    w-full
+                    h-12
                     px-4
                     rounded-2xl
-                    bg-gray-100/80
+                    bg-gray-100
+                    outline-none
+                    text-sm
+                    mb-3
                   "
                 >
 
-                  <MapPin
-                    size={16}
-                    className="text-pink-500"
-                  />
+                  <option value="8hr/80km">
+                    8hr / 80km
+                  </option>
 
-                  <input
-                    value={pickup}
-                    readOnly
+                  <option value="12hr/120km">
+                    12hr / 120km
+                  </option>
+
+                </select>
+
+              ) : (
+
+                <div className="relative mb-3">
+
+                  <div
                     className="
-                      bg-transparent
-                      w-full
-                      outline-none
-                      text-sm
-                    "
-                  />
-                </div>
-
-                {/* RENT PACKAGE */}
-                {mode === "rent" ? (
-
-                  <select
-                    value={pkg}
-                    onChange={(e) =>
-                      setPkg(
-                        e.target
-                          .value as any
-                      )
-                    }
-                    className="
-                      w-full
-                      h-11
+                      flex
+                      items-center
+                      gap-3
+                      h-12
                       px-4
                       rounded-2xl
-                      bg-gray-100/80
-                      outline-none
-                      text-sm
+                      bg-gray-100
                     "
                   >
 
-                    <option value="8hr/80km">
-                      8hr / 80km
-                    </option>
+                    <MapPin
+                      size={18}
+                      className="text-pink-500"
+                    />
 
-                    <option value="12hr/120km">
-                      12hr / 120km
-                    </option>
+                    <input
+                      value={drop}
+                      onChange={(e) =>
+                        searchLocation(
+                          e.target.value
+                        )
+                      }
+                      placeholder={
+                        mode === "airport"
+                          ? "Mumbai Airport"
+                          : "Search city"
+                      }
+                      className="
+                        bg-transparent
+                        w-full
+                        outline-none
+                        text-sm
+                      "
+                    />
+                  </div>
 
-                  </select>
+                  {/* SUGGESTIONS */}
+                  {suggestions.length > 0 && (
 
-                ) : (
-
-                  <div className="relative">
-
-                    {/* input */}
                     <div
                       className="
-                        flex
-                        items-center
-                        gap-3
-                        h-11
-                        px-4
+                        absolute
+                        top-full
+                        left-0
+                        right-0
+                        bg-white
                         rounded-2xl
-                        bg-gray-100/80
-                        border
-                        border-pink-200
-                        focus-within:border-pink-500
-                        focus-within:bg-white
-                        transition-all
+                        shadow-2xl
+                        mt-2
+                        overflow-hidden
+                        z-50
                       "
                     >
 
-                      <MapPin
-                        size={16}
-                        className="text-pink-500"
-                      />
+                      {suggestions.map(
+                        (
+                          item: any,
+                          index
+                        ) => (
 
-                      <input
-                        value={drop}
-                        onChange={(e) =>
-                          searchLocation(
-                            e.target
-                              .value
-                          )
-                        }
-                        placeholder={
-                          mode ===
-                          "airport"
-                            ? "Mumbai Airport"
-                            : "Search city"
-                        }
-                        className="
-                          bg-transparent
-                          w-full
-                          outline-none
-                          text-sm
-                        "
-                      />
-                    </div>
+                          <button
+                            key={index}
+                            onClick={() => {
 
-                    {/* suggestions */}
-                    {suggestions.length >
-                      0 && (
-
-                      <div
-                        className="
-                          absolute
-                          top-full
-                          left-0
-                          right-0
-                          bg-white
-                          border
-                          rounded-2xl
-                          shadow-2xl
-                          mt-2
-                          overflow-hidden
-                          z-50
-                          max-h-60
-                          overflow-y-auto
-                        "
-                      >
-
-                        {suggestions.map(
-                          (
-                            item: any,
-                            index
-                          ) => (
-
-                            <button
-                              key={index}
-                              onClick={() => {
-
-                                setDrop(
-                                  item.display_name
-                                );
-
-                                setSuggestions(
-                                  []
-                                );
-
-                                const destination =
-                                  {
-
-                                    lat: Number(
-                                      item.lat
-                                    ),
-
-                                    lon: Number(
-                                      item.lon
-                                    ),
-                                  };
-
-                                setToCoords(
-                                  destination
-                                );
-
-                                getRoute(
-                                  fromCoords,
-                                  destination
-                                );
-                              }}
-                              className="
-                                w-full
-                                text-left
-                                px-4
-                                py-3
-                                hover:bg-pink-50
-                                border-b
-                                text-sm
-                              "
-                            >
-                              {
+                              setDrop(
                                 item.display_name
-                              }
-                            </button>
-                          )
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                              );
 
-                {/* DATE */}
-                <div
-                  className="
-                    flex
-                    items-center
-                    gap-3
-                    h-11
-                    px-4
-                    rounded-2xl
-                    bg-gray-100/80
-                  "
-                >
+                              setSuggestions([]);
 
-                  <CalendarDays
-                    size={16}
-                    className="text-pink-500"
-                  />
+                              const destination = {
+                                lat: Number(item.lat),
+                                lon: Number(item.lon),
+                              };
 
-                  <input
-                    type="datetime-local"
-                    value={rideTime}
-                    onChange={(e) =>
-                      setRideTime(
-                        e.target.value
-                      )
-                    }
-                    className="
-                      bg-transparent
-                      w-full
-                      outline-none
-                      text-sm
-                    "
-                  />
+                              setToCoords(destination);
+
+                              getRoute(
+                                fromCoords,
+                                destination
+                              );
+                            }}
+                            className="
+                              w-full
+                              text-left
+                              px-4
+                              py-3
+                              hover:bg-pink-50
+                              border-b
+                              text-sm
+                            "
+                          >
+                            {item.display_name}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {/* DATE */}
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  h-12
+                  px-4
+                  rounded-2xl
+                  bg-gray-100
+                  mb-4
+                "
+              >
+
+                <CalendarDays
+                  size={18}
+                  className="text-pink-500"
+                />
+
+                <input
+                  type="datetime-local"
+                  value={rideTime}
+                  onChange={(e) =>
+                    setRideTime(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    bg-transparent
+                    w-full
+                    outline-none
+                    text-sm
+                  "
+                />
               </div>
 
-              {/* ===================
-                  DISTANCE + TIME
-              =================== */}
+              {/* DISTANCE */}
               {distance > 0 &&
                 mode !== "rent" && (
 
                 <div
                   className="
-                    mt-4
                     inline-flex
                     items-center
                     gap-2
                     bg-pink-50
                     text-pink-600
-                    px-3
+                    px-4
                     py-2
                     rounded-full
                     text-sm
                     font-medium
+                    mb-4
                   "
                 >
-                  🚗 {distance} km •
-                  ⏱ {duration}
+                  🚗 {distance} km • ⏱ {duration}
                 </div>
               )}
 
-              {/* ===================
-                  CARS
-              =================== */}
+              {/* CARS */}
               <div
                 className="
                   grid
                   grid-cols-2
                   md:grid-cols-4
                   gap-3
-                  mt-5
                 "
               >
 
@@ -893,28 +816,20 @@ export default function Hero() {
                     <div
                       key={car}
                       onClick={() =>
-                        setSelectedCar(
-                          car
-                        )
+                        setSelectedCar(car)
                       }
                       className={`
-                        rounded-[22px]
+                        rounded-2xl
                         border
-                        border-gray-200
-                        bg-white
                         p-3
                         text-center
                         cursor-pointer
                         transition-all
-                        duration-300
-                        hover:shadow-xl
-                        hover:border-pink-300
 
                         ${
-                          selectedCar ===
-                          car
-                            ? "border-pink-500 bg-gradient-to-br from-pink-50 to-rose-50 shadow-xl"
-                            : ""
+                          selectedCar === car
+                            ? "border-pink-500 bg-pink-50 shadow-lg"
+                            : "border-gray-200 bg-white"
                         }
                       `}
                     >
@@ -930,7 +845,7 @@ export default function Hero() {
 
                       <p
                         className="
-                          text-[11px]
+                          text-xs
                           text-gray-500
                           mt-1
                         "
@@ -940,12 +855,8 @@ export default function Hero() {
 
                       <div
                         className="
-                          text-transparent
-                          bg-clip-text
-                          bg-gradient-to-r
-                          from-pink-500
-                          to-rose-500
-                          text-xl
+                          text-pink-500
+                          text-2xl
                           font-black
                           mt-2
                         "
@@ -958,31 +869,16 @@ export default function Hero() {
                 })}
               </div>
 
-              {/* ===================
-                  BUTTON
-              =================== */}
+              {/* BUTTON */}
               {selectedCar && (
 
                 <button
-                  onClick={() => {
-
-                    const price =
-                      calculateFare(
-                        distance,
-                        mode,
-                        selectedCar as any,
-                        pkg
-                      );
-
-                    router.push(
-                      `/booking?car=${selectedCar}&mode=${mode}&price=${price}`
-                    );
-                  }}
+                  onClick={handleBooking}
                   className="
                     w-full
-                    h-11
-                    mt-5
+                    h-12
                     rounded-2xl
+                    mt-5
                     font-bold
                     text-white
                     bg-gradient-to-r

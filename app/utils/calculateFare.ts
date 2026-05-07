@@ -6,56 +6,63 @@ export const calculateFare = (
   car: "WagonR" | "Dzire" | "Ertiga" | "Innova",
   pkg?: "8hr/80km" | "12hr/120km"
 ) => {
+
   let fare = 0;
 
-  const hour = new Date().getHours();
-
-  // 🌙 NIGHT CHECK
-  const isNight = hour >= 22 || hour <= 6;
-
-  // 🔥 SURGE CHECK (example: 8-10 AM & 6-9 PM)
-  const isSurge =
-    (hour >= 8 && hour <= 10) || (hour >= 18 && hour <= 21);
-
-  // 🟢 RENT
+  // =========================
+  // RENT
+  // =========================
   if (mode === "rent") {
+
     if (!pkg) return 0;
-    fare = pricing.rent.packages[pkg][car];
+
+    fare =
+      pricing.rent.packages[pkg][car];
   }
 
-  // 🟣 ONEWAY
+  // =========================
+  // ONEWAY
+  // =========================
   if (mode === "oneway") {
+
     if (!distance) return 0;
 
-    const base = pricing.oneway.base[car];
-    const perKm = pricing.oneway.perKm[car];
-    const minKm = pricing.oneway.minKm;
+    const base =
+      pricing.oneway.base[car];
 
+    const perKm =
+      pricing.oneway.perKm[car];
+
+    const minKm =
+      pricing.oneway.minKm;
+
+    // MINIMUM KM
     if (distance <= minKm) {
+
       fare = base;
+
     } else {
-      const extraKm = distance - minKm;
-      fare = base + extraKm * perKm;
+
+      const extraKm =
+        distance - minKm;
+
+      fare =
+        base +
+        extraKm * perKm;
     }
-
-    // 🧾 DRIVER ALLOWANCE
-    fare += pricing.oneway.driverAllowance;
   }
 
-  // 🔵 AIRPORT
+  // =========================
+  // AIRPORT
+  // =========================
   if (mode === "airport") {
-    fare = pricing.airport.base[car];
+
+    fare =
+      pricing.airport.base[car];
   }
 
-  // 🌙 APPLY NIGHT
-  if (isNight) {
-    fare *= pricing.extra.nightCharge;
-  }
-
-  // 🔥 APPLY SURGE
-  if (isSurge) {
-    fare *= pricing.extra.surge;
-  }
-
+  // =========================
+  // FINAL PRICE
+  // =========================
   return Math.round(fare);
 };

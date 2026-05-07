@@ -4,14 +4,12 @@ import {
   MapContainer,
   TileLayer,
   Marker,
-  Polyline,
-  useMap,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 
-// 🔥 marker fix
+// marker fix
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -22,125 +20,40 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
-// 🚗 cab icon
+// cab icon
 const cabIcon = new L.Icon({
-  iconUrl:
-    "https://cdn-icons-png.flaticon.com/512/744/744465.png",
-  iconSize: [30, 30],
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
+  iconSize: [28, 28],
 });
 
-type Props = {
-  from: { lat: number; lon: number };
-  to?: { lat: number; lon: number } | null;
-  route?: any[];
-  onPickupChange?: (coords: any) => void;
-};
-
-// 📍 draggable pickup
-function DraggableMarker({ from, onChange }: any) {
-  const [pos, setPos] = useState(from);
-
-  return (
-    <Marker
-      draggable
-      position={[pos.lat, pos.lon]}
-      eventHandlers={{
-        dragend: (e) => {
-          const latlng = e.target.getLatLng();
-          const newPos = { lat: latlng.lat, lon: latlng.lng };
-          setPos(newPos);
-          onChange && onChange(newPos);
-        },
-      }}
-    />
-  );
-}
-
-// 🔥 auto fit map to route
-function FitBounds({ route, from, to }: any) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (route && route.length > 0) {
-      const bounds = L.latLngBounds(route);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    } else if (to) {
-      map.setView([to.lat, to.lon], 13);
-    } else {
-      map.setView([from.lat, from.lon], 13);
-    }
-  }, [route, to, from, map]);
-
-  return null;
-}
-
-export default function MapView({
-  from,
-  to,
-  route = [],
-  onPickupChange,
-}: Props) {
+export default function MapView({ from }: any) {
   const [cabs, setCabs] = useState<any[]>([]);
 
-  // 🚗 initial random cabs
   useEffect(() => {
-    const arr = Array.from({ length: 12 }).map(() => ({
+    const arr = Array.from({ length: 10 }).map(() => ({
       lat: from.lat + (Math.random() - 0.5) * 0.02,
       lon: from.lon + (Math.random() - 0.5) * 0.02,
     }));
     setCabs(arr);
   }, [from]);
 
-  // 🚀 LIVE CAB MOVEMENT (animation)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCabs((prev) =>
-        prev.map((cab) => ({
-          lat: cab.lat + (Math.random() - 0.5) * 0.001,
-          lon: cab.lon + (Math.random() - 0.5) * 0.001,
-        }))
-      );
-    }, 1500); // 🔥 speed control
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className="w-full h-screen">
-      <MapContainer
-        center={[from.lat, from.lon]}
-        zoom={13}
-        className="w-full h-full"
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <MapContainer
+      center={[from.lat, from.lon]}
+      zoom={13}
+      className="w-full h-full"
+    >
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {/* 📍 Pickup draggable */}
-        <DraggableMarker from={from} onChange={onPickupChange} />
+      <Marker position={[from.lat, from.lon]} />
 
-        {/* 📍 Drop */}
-        {to && <Marker position={[to.lat, to.lon]} />}
-
-        {/* 🛣 Route */}
-        {route.length > 0 && (
-          <Polyline
-            positions={route}
-            color="#ec4899"
-            weight={5}
-          />
-        )}
-
-        {/* 🚗 LIVE CABS */}
-        {cabs.map((cab, i) => (
-          <Marker
-            key={i}
-            position={[cab.lat, cab.lon]}
-            icon={cabIcon}
-          />
-        ))}
-
-        {/* 🎯 AUTO ZOOM */}
-        <FitBounds route={route} from={from} to={to} />
-      </MapContainer>
-    </div>
+      {cabs.map((cab, i) => (
+        <Marker
+          key={i}
+          position={[cab.lat, cab.lon]}
+          icon={cabIcon}
+        />
+      ))}
+    </MapContainer>
   );
 }

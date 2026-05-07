@@ -60,6 +60,9 @@ export default function Hero() {
   const [distance, setDistance] =
     useState(0);
 
+  const [duration, setDuration] =
+    useState("");
+
   const [rideTime, setRideTime] =
     useState("");
 
@@ -81,7 +84,7 @@ export default function Hero() {
   ];
 
   // =======================
-  // LOCATION
+  // GET LOCATION
   // =======================
   useEffect(() => {
 
@@ -119,21 +122,41 @@ export default function Hero() {
       }
     );
 
-    // default time
+    // =======================
+    // INDIA CURRENT TIME +1 HOUR
+    // =======================
     const now = new Date();
 
-    now.setHours(
-      now.getHours() + 1
+    const indiaTime =
+      new Date(
+        now.toLocaleString(
+          "en-US",
+          {
+            timeZone:
+              "Asia/Kolkata",
+          }
+        )
+      );
+
+    indiaTime.setHours(
+      indiaTime.getHours() + 1
     );
 
-    setRideTime(
-      now.toISOString().slice(0, 16)
-    );
+    const formatted =
+      new Date(
+        indiaTime.getTime() -
+          indiaTime.getTimezoneOffset() *
+            60000
+      )
+        .toISOString()
+        .slice(0, 16);
+
+    setRideTime(formatted);
 
   }, []);
 
   // =======================
-  // ROUTE
+  // GET ROUTE
   // =======================
   const getRoute = async (
     from: any,
@@ -154,7 +177,9 @@ export default function Hero() {
 
       if (!r) return;
 
-      // distance
+      // =======================
+      // DISTANCE
+      // =======================
       setDistance(
         Number(
           (
@@ -163,7 +188,38 @@ export default function Hero() {
         )
       );
 
-      // route line
+      // =======================
+      // DURATION
+      // =======================
+      const totalMinutes =
+        Math.ceil(
+          r.duration / 60
+        );
+
+      const hours =
+        Math.floor(
+          totalMinutes / 60
+        );
+
+      const minutes =
+        totalMinutes % 60;
+
+      if (hours > 0) {
+
+        setDuration(
+          `${hours} hr ${minutes} min`
+        );
+
+      } else {
+
+        setDuration(
+          `${minutes} min`
+        );
+      }
+
+      // =======================
+      // ROUTE LINE
+      // =======================
       setRoute(
         r.geometry.coordinates.map(
           (c: any) => [
@@ -224,6 +280,8 @@ export default function Hero() {
       setSuggestions([]);
 
       setDistance(0);
+
+      setDuration("");
 
       setRoute([]);
 
@@ -520,6 +578,8 @@ export default function Hero() {
 
                       setDistance(0);
 
+                      setDuration("");
+
                       setSelectedCar(
                         ""
                       );
@@ -780,7 +840,7 @@ export default function Hero() {
               </div>
 
               {/* ===================
-                  DISTANCE
+                  DISTANCE + TIME
               =================== */}
               {distance > 0 &&
                 mode !== "rent" && (
@@ -800,8 +860,8 @@ export default function Hero() {
                     font-medium
                   "
                 >
-                  🚗 {distance} km
-                  route
+                  🚗 {distance} km •
+                  ⏱ {duration}
                 </div>
               )}
 

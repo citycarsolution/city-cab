@@ -46,8 +46,7 @@ export default function Hero() {
 
         setPickup(data.display_name);
       },
-      () => setPickup("Location not allowed"),
-      { enableHighAccuracy: true }
+      () => setPickup("Location not allowed")
     );
   }, []);
 
@@ -103,27 +102,25 @@ export default function Hero() {
   }, [mode, fromCoords]);
 
   const cars = ["WagonR", "Dzire", "Ertiga", "Innova"];
-
   const showCars = mode === "rent" || !!toCoords;
 
   return (
-  <div className="relative h-[100dvh] overflow-hidden">  
-  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-0"></div>
+    <div className="relative h-screen overflow-hidden pb-[90px]">
 
       {/* MAP */}
       {fromCoords && (
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0">
           <MapView from={fromCoords} to={toCoords} route={route} />
         </div>
       )}
 
-      {/* 🔥 GLASS OVERLAY */}
-      <div className="absolute inset-0 bg-black/10 z-0"></div>
+      {/* DARK OVERLAY */}
+      <div className="absolute inset-0 bg-black/10"></div>
 
       {/* CARD */}
-      <div className="absolute bottom-[80px] w-full z-10 px-3 flex justify-center">
+      <div className="absolute bottom-0 w-full px-3 pb-24 flex justify-center z-10">
 
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-4 w-full max-w-md max-h-[65vh] overflow-auto">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-4 w-full max-w-md max-h-[65vh] overflow-auto border">
 
           <h2 className="font-bold text-lg mb-3">Book Your Ride</h2>
 
@@ -132,19 +129,9 @@ export default function Hero() {
             {["rent", "oneway", "airport"].map((m) => (
               <button
                 key={m}
-                onClick={() => {
-                  setMode(m as Mode);
-                  setDrop("");
-                  setToCoords(null);
-                  setRoute([]);
-                  setDistance(0);
-                  setDuration(0);
-                  setSelectedCar(null);
-                }}
-                className={`flex-1 py-2 rounded-xl text-sm font-medium ${
-                  mode === m
-                    ? "bg-pink-500 text-white shadow"
-                    : "border bg-white"
+                onClick={() => setMode(m as Mode)}
+                className={`flex-1 py-2 rounded-xl text-sm ${
+                  mode === m ? "bg-pink-500 text-white" : "border"
                 }`}
               >
                 {m}
@@ -164,30 +151,25 @@ export default function Hero() {
                   setDrop(e.target.value);
                   searchPlace(e.target.value);
                 }}
-                placeholder="Enter Drop Location"
+                placeholder="Enter Drop"
                 className="input"
               />
 
               {dropSug.length > 0 && (
-                <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-xl shadow-lg">
+                <div className="absolute bg-white border w-full z-50 rounded-xl shadow">
                   {dropSug.map((item, i) => (
                     <div
                       key={i}
-                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                      onClick={async () => {
+                      className="p-2 text-sm hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
                         setDrop(item.display_name);
                         setDropSug([]);
-
                         const to = {
                           lat: parseFloat(item.lat),
                           lon: parseFloat(item.lon),
                         };
-
                         setToCoords(to);
-
-                        if (fromCoords) {
-                          await getRoute(fromCoords, to);
-                        }
+                        getRoute(fromCoords, to);
                       }}
                     >
                       {item.display_name}
@@ -205,8 +187,8 @@ export default function Hero() {
               onChange={(e) => setPkg(e.target.value as any)}
               className="input mb-2"
             >
-              <option value="8hr/80km">8hr / 80km</option>
-              <option value="12hr/120km">12hr / 120km</option>
+              <option>8hr / 80km</option>
+              <option>12hr / 120km</option>
             </select>
           )}
 
@@ -227,31 +209,23 @@ export default function Hero() {
             </div>
           )}
 
-          {/* 🚗 CAR GRID */}
+          {/* CARS */}
           {showCars && (
-            <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="grid grid-cols-2 gap-3">
               {cars.map((car) => {
                 const price = calculateFare(distance, mode, car as any, pkg);
-                const isActive = selectedCar === car;
 
                 return (
                   <div
                     key={car}
                     onClick={() => setSelectedCar(car)}
-                    className={`cursor-pointer border rounded-2xl p-3 text-center transition duration-200
-                    ${
-                      isActive
-                        ? "border-pink-500 shadow-lg scale-105"
-                        : "bg-white hover:shadow-lg hover:scale-105"
-                    }`}
+                    className="bg-white border rounded-xl p-3 text-center shadow-sm hover:shadow-lg hover:scale-105 transition"
                   >
-                    <div className="font-semibold text-sm">{car}</div>
-
+                    <div className="font-semibold">{car}</div>
                     <div className="text-xs text-gray-500">
                       AC • 4+1 • 2 Bags
                     </div>
-
-                    <div className="text-pink-500 font-bold mt-1 text-lg">
+                    <div className="text-pink-500 font-bold mt-1">
                       ₹{price}
                     </div>
                   </div>
@@ -263,21 +237,10 @@ export default function Hero() {
           {/* BUTTON */}
           {selectedCar && (
             <button
-              onClick={() => {
-                const price = calculateFare(
-                  distance,
-                  mode,
-                  selectedCar as any,
-                  pkg
-                );
-
-                router.push(
-                  `/booking?car=${selectedCar}&mode=${mode}&price=${price}&pickup=${encodeURIComponent(
-                    pickup
-                  )}&drop=${encodeURIComponent(drop)}&distance=${distance}`
-                );
-              }}
-              className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold text-lg shadow-lg"
+              onClick={() =>
+                router.push(`/booking?car=${selectedCar}&mode=${mode}`)
+              }
+              className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold"
             >
               Book {selectedCar}
             </button>

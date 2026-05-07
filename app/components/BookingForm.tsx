@@ -112,7 +112,7 @@ export default function BookingForm({ data }: any) {
         "service_nyf10gh",
 
         // TEMPLATE ID
-        "__ejs-test-mail-service__",
+        "template_58tjlqp",
 
         {
 

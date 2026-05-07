@@ -94,11 +94,9 @@ export default function Hero() {
     setRoute(coords);
   };
 
-  // ✈️ AIRPORT AUTO
   useEffect(() => {
     if (mode === "airport" && fromCoords) {
       const airport = { lat: 19.0896, lon: 72.8656 };
-
       setDrop("Mumbai Airport");
       setToCoords(airport);
       getRoute(fromCoords, airport);
@@ -118,9 +116,9 @@ export default function Hero() {
         </div>
       )}
 
-      {/* BOTTOM CARD */}
+      {/* BOTTOM SHEET */}
       <div className="fixed bottom-0 left-0 right-0 z-50">
-        <div className="bg-white rounded-t-3xl p-4 shadow-2xl max-h-[75dvh] overflow-y-auto pb-28">
+        <div className="bg-white rounded-t-3xl p-4 shadow-2xl max-h-[75dvh] overflow-y-auto pb-32">
 
           <h2 className="font-bold text-lg mb-3">Book Your Ride</h2>
 
@@ -131,12 +129,10 @@ export default function Hero() {
                 key={m}
                 onClick={() => {
                   setMode(m as Mode);
+                  setSelectedCar(null);
                   setDrop("");
                   setToCoords(null);
                   setRoute([]);
-                  setDistance(0);
-                  setDuration(0);
-                  setSelectedCar(null);
                 }}
                 className={`flex-1 py-2 rounded-lg ${
                   mode === m ? "bg-pink-500 text-white" : "border"
@@ -147,53 +143,20 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* PICKUP */}
           <input value={pickup} readOnly className="input bg-gray-100" />
 
-          {/* DROP */}
           {mode !== "rent" && (
-            <div className="relative">
-              <input
-                value={drop}
-                onChange={(e) => {
-                  setDrop(e.target.value);
-                  searchPlace(e.target.value);
-                }}
-                placeholder="Enter Drop Location"
-                className="input"
-              />
-
-              {dropSug.length > 0 && (
-                <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-lg shadow">
-                  {dropSug.map((item, i) => (
-                    <div
-                      key={i}
-                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                      onClick={async () => {
-                        setDrop(item.display_name);
-                        setDropSug([]);
-
-                        const to = {
-                          lat: parseFloat(item.lat),
-                          lon: parseFloat(item.lon),
-                        };
-
-                        setToCoords(to);
-
-                        if (fromCoords) {
-                          await getRoute(fromCoords, to);
-                        }
-                      }}
-                    >
-                      {item.display_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <input
+              value={drop}
+              onChange={(e) => {
+                setDrop(e.target.value);
+                searchPlace(e.target.value);
+              }}
+              placeholder="Enter Drop Location"
+              className="input"
+            />
           )}
 
-          {/* PACKAGE */}
           {mode === "rent" && (
             <select
               value={pkg}
@@ -205,24 +168,14 @@ export default function Hero() {
             </select>
           )}
 
-          {/* TIME */}
           <input
             type="datetime-local"
             value={rideTime}
-            min={rideTime}
             onChange={(e) => setRideTime(e.target.value)}
-            className="input mt-2"
+            className="input"
           />
 
-          {/* DISTANCE */}
-          {distance > 0 && mode !== "rent" && (
-            <div className="text-sm text-gray-600 mb-2 flex gap-3">
-              <span>🚗 {distance} km</span>
-              <span>⏱ {duration} min</span>
-            </div>
-          )}
-
-          {/* 🚗 FINAL GRID */}
+          {/* CAR GRID */}
           {showCars && (
             <div className="grid grid-cols-2 gap-4 mt-4">
               {cars.map((car) => {
@@ -233,19 +186,17 @@ export default function Hero() {
                   <div
                     key={car}
                     onClick={() => setSelectedCar(car)}
-                    className={`cursor-pointer border rounded-2xl p-4 text-center bg-white transition-all
+                    className={`border rounded-2xl p-4 text-center bg-white
                       ${
                         isActive
-                          ? "border-pink-500 shadow-lg scale-[1.03]"
+                          ? "border-pink-500 shadow-md"
                           : "border-gray-300"
                       }`}
                   >
-                    <div className="font-semibold text-base">{car}</div>
-
+                    <div className="font-semibold">{car}</div>
                     <div className="text-xs text-gray-500">
                       AC • 4+1 • 2 Bags
                     </div>
-
                     <div className="text-pink-500 font-bold mt-2 text-lg">
                       ₹{price}
                     </div>
@@ -255,27 +206,28 @@ export default function Hero() {
             </div>
           )}
 
-          {/* BOOK BUTTON */}
-          {selectedCar && (
-            <button
-              onClick={() => {
-                const price = calculateFare(
-                  distance,
-                  mode,
-                  selectedCar as any,
-                  pkg
-                );
-
-                router.push(`/booking?car=${selectedCar}&price=${price}`);
-              }}
-              className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold"
-            >
-              Book {selectedCar}
-            </button>
-          )}
-
         </div>
       </div>
+
+      {/* 🔥 FIXED BUTTON */}
+      {selectedCar && (
+        <div className="fixed bottom-16 left-0 right-0 px-4 z-[60]">
+          <button
+            onClick={() => {
+              const price = calculateFare(
+                distance,
+                mode,
+                selectedCar as any,
+                pkg
+              );
+              router.push(`/booking?car=${selectedCar}&price=${price}`);
+            }}
+            className="w-full bg-pink-500 text-white py-3 rounded-xl font-bold shadow-lg"
+          >
+            Book {selectedCar}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

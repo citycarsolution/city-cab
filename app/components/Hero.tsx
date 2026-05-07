@@ -39,19 +39,22 @@ export default function Hero() {
 
         setFromCoords({ lat, lon });
 
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-        );
-        const data = await res.json();
-
-        setPickup(data.display_name);
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+          );
+          const data = await res.json();
+          setPickup(data.display_name || "Current Location");
+        } catch {
+          setPickup("Current Location");
+        }
       },
       () => setPickup("Location not allowed"),
       { enableHighAccuracy: true, timeout: 5000 }
     );
   }, []);
 
-  // ⏱ TIME (1 hour rule)
+  // ⏱ TIME
   useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
@@ -72,7 +75,7 @@ export default function Hero() {
     setDropSug(data);
   };
 
-  // 🚗 ROUTE + TIME (FIXED)
+  // 🚗 ROUTE
   const getRoute = async (from: any, to: any) => {
     if (!from || !to) return;
 
@@ -103,31 +106,26 @@ export default function Hero() {
   }, [mode, fromCoords]);
 
   const cars = ["WagonR", "Dzire", "Ertiga", "Innova"];
-
   const showCars = mode === "rent" || !!toCoords;
 
   return (
-    <div className="relative h-screen">
+    <div className="relative w-full h-[100dvh] overflow-hidden">
 
       {/* MAP */}
       {fromCoords && (
         <div className="absolute inset-0 z-0">
-          <MapView
-            from={fromCoords}
-            to={toCoords}
-            route={route}
-          />
+          <MapView from={fromCoords} to={toCoords} route={route} />
         </div>
       )}
 
-      {/* CARD */}
-     <div className="fixed bottom-0 left-0 right-0 z-50">
-        <div className="bg-white rounded-2xl p-4 shadow-xl max-h-[80vh] overflow-auto">
+      {/* BOTTOM CARD */}
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="bg-white rounded-t-3xl p-4 shadow-2xl max-h-[75dvh] overflow-y-auto pb-28">
 
-          <h2 className="font-bold text-lg mb-2">Book Your Ride</h2>
+          <h2 className="font-bold text-lg mb-3">Book Your Ride</h2>
 
           {/* MODE */}
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-3">
             {["rent", "oneway", "airport"].map((m) => (
               <button
                 key={m}
@@ -195,7 +193,7 @@ export default function Hero() {
             </div>
           )}
 
-          {/* RENT PACKAGE */}
+          {/* PACKAGE */}
           {mode === "rent" && (
             <select
               value={pkg}
@@ -216,7 +214,7 @@ export default function Hero() {
             className="input mt-2"
           />
 
-          {/* DISTANCE + TIME */}
+          {/* DISTANCE */}
           {distance > 0 && mode !== "rent" && (
             <div className="text-sm text-gray-600 mb-2 flex gap-3">
               <span>🚗 {distance} km</span>
@@ -224,9 +222,9 @@ export default function Hero() {
             </div>
           )}
 
-          {/* 🚗 CAR GRID */}
+          {/* 🚗 FINAL GRID */}
           {showCars && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <div className="grid grid-cols-2 gap-4 mt-4">
               {cars.map((car) => {
                 const price = calculateFare(distance, mode, car as any, pkg);
                 const isActive = selectedCar === car;
@@ -235,19 +233,20 @@ export default function Hero() {
                   <div
                     key={car}
                     onClick={() => setSelectedCar(car)}
-                    className={`cursor-pointer border rounded-xl p-3 text-center transition duration-200
-                      ${isActive
-                        ? "border-pink-500 shadow-lg scale-105"
-                        : "hover:shadow-lg hover:scale-105"
+                    className={`cursor-pointer border rounded-2xl p-4 text-center bg-white transition-all
+                      ${
+                        isActive
+                          ? "border-pink-500 shadow-lg scale-[1.03]"
+                          : "border-gray-300"
                       }`}
                   >
-                    <div className="font-semibold text-sm">{car}</div>
+                    <div className="font-semibold text-base">{car}</div>
 
                     <div className="text-xs text-gray-500">
                       AC • 4+1 • 2 Bags
                     </div>
 
-                    <div className="text-pink-500 font-bold mt-1 text-lg">
+                    <div className="text-pink-500 font-bold mt-2 text-lg">
                       ₹{price}
                     </div>
                   </div>
@@ -267,13 +266,9 @@ export default function Hero() {
                   pkg
                 );
 
-                router.push(
-                  `/booking?car=${selectedCar}&mode=${mode}&price=${price}&pickup=${encodeURIComponent(
-                    pickup
-                  )}&drop=${encodeURIComponent(drop)}&distance=${distance}`
-                );
+                router.push(`/booking?car=${selectedCar}&price=${price}`);
               }}
-              className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold text-lg shadow-lg"
+              className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold"
             >
               Book {selectedCar}
             </button>

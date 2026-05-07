@@ -3,477 +3,841 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import {
+  MapPin,
+  CalendarDays,
+  Car,
+} from "lucide-react";
+
 import { calculateFare } from "../utils/calculateFare";
 
-const MapView = dynamic(() => import("./MapView"), {
-  ssr: false,
-});
+// =======================
+// MAP IMPORT
+// =======================
+const MapView = dynamic(
+  () => import("./MapView"),
+  {
+    ssr: false,
+  }
+);
 
-type Mode = "rent" | "oneway" | "airport";
+// =======================
+// TYPES
+// =======================
+type Mode =
+  | "rent"
+  | "oneway"
+  | "airport";
 
 export default function Hero() {
+
   const router = useRouter();
 
-  const [mode, setMode] = useState<Mode>("rent");
+  // =======================
+  // STATES
+  // =======================
+  const [mode, setMode] =
+    useState<Mode>("rent");
 
-  const [pickup, setPickup] = useState("Detecting...");
-  const [drop, setDrop] = useState("");
-  const [dropSug, setDropSug] = useState<any[]>([]);
+  const [pickup, setPickup] =
+    useState("Detecting location...");
 
-  const [fromCoords, setFromCoords] = useState<any>(null);
-  const [toCoords, setToCoords] = useState<any>(null);
+  const [drop, setDrop] =
+    useState("");
 
-  const [distance, setDistance] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(0);
-  const [route, setRoute] = useState<any[]>([]);
+  const [fromCoords, setFromCoords] =
+    useState<any>(null);
 
-  const [pkg, setPkg] = useState<"8hr/80km" | "12hr/120km">("8hr/80km");
+  const [toCoords, setToCoords] =
+    useState<any>(null);
 
-  const [selectedCar, setSelectedCar] = useState<string | null>(null);
+  const [route, setRoute] =
+    useState<any[]>([]);
 
-  const [rideTime, setRideTime] = useState("");
+  const [distance, setDistance] =
+    useState(0);
 
-  // 📍 LOCATION
+  const [rideTime, setRideTime] =
+    useState("");
+
+  const [selectedCar, setSelectedCar] =
+    useState("");
+
+  const [pkg, setPkg] = useState<
+    "8hr/80km" | "12hr/120km"
+  >("8hr/80km");
+
+  // =======================
+  // CARS
+  // =======================
+  const cars = [
+    "WagonR",
+    "Dzire",
+    "Ertiga",
+    "Innova",
+  ];
+
+  // =======================
+  // GET LOCATION
+  // =======================
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
 
-        setFromCoords({ lat, lon });
+    navigator.geolocation.getCurrentPosition(
+
+      async (pos) => {
+
+        const lat =
+          pos.coords.latitude;
+
+        const lon =
+          pos.coords.longitude;
+
+        setFromCoords({
+          lat,
+          lon,
+        });
 
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
         );
 
-        const data = await res.json();
+        const data =
+          await res.json();
 
-        setPickup(data.display_name);
+        setPickup(
+          data.display_name
+        );
       },
-      () => setPickup("Location not allowed"),
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
+
+      () => {
+        setPickup(
+          "Location access denied"
+        );
       }
     );
-  }, []);
 
-  // ⏰ TIME
-  useEffect(() => {
     const now = new Date();
 
-    now.setHours(now.getHours() + 1);
-
-    setRideTime(now.toISOString().slice(0, 16));
-  }, []);
-
-  // 🔍 SEARCH
-  const searchPlace = async (q: string) => {
-    if (q.length < 3) return;
-
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        q + ", India"
-      )}&limit=5`
+    now.setHours(
+      now.getHours() + 1
     );
 
-    const data = await res.json();
+    setRideTime(
+      now.toISOString().slice(0, 16)
+    );
 
-    setDropSug(data);
-  };
+  }, []);
 
-  // 🚗 ROUTE
-  const getRoute = async (from: any, to: any) => {
+  // =======================
+  // GET ROUTE
+  // =======================
+  const getRoute = async (
+    from: any,
+    to: any
+  ) => {
+
     if (!from || !to) return;
 
     const res = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
     );
 
-    const data = await res.json();
+    const data =
+      await res.json();
 
-    const r = data.routes?.[0];
+    const r =
+      data.routes?.[0];
 
     if (!r) return;
 
-    setDistance(Number((r.distance / 1000).toFixed(1)));
+    setDistance(
+      Number(
+        (r.distance / 1000).toFixed(1)
+      )
+    );
 
-    setDuration(Math.round(r.duration / 60));
-
-    const coords = r.geometry.coordinates.map((c: any) => [c[1], c[0]]);
-
-    setRoute(coords);
+    setRoute(
+      r.geometry.coordinates.map(
+        (c: any) => [c[1], c[0]]
+      )
+    );
   };
 
-  // ✈️ AIRPORT AUTO
+  // =======================
+  // AIRPORT AUTO
+  // =======================
   useEffect(() => {
-    if (mode === "airport" && fromCoords) {
+
+    if (
+      mode === "airport" &&
+      fromCoords
+    ) {
+
       const airport = {
         lat: 19.0896,
         lon: 72.8656,
       };
 
-      setDrop("Mumbai Airport");
+      setDrop(
+        "Mumbai Airport"
+      );
 
       setToCoords(airport);
 
-      getRoute(fromCoords, airport);
+      getRoute(
+        fromCoords,
+        airport
+      );
     }
+
   }, [mode, fromCoords]);
 
-  const cars = ["WagonR", "Dzire", "Ertiga", "Innova"];
+  // =======================
+  // SEARCH LOCATION
+  // =======================
+  const searchLocation =
+    async (value: string) => {
 
-  const showCars = mode === "rent" || !!toCoords;
+      setDrop(value);
 
-  // 🗺️ MAP HEIGHT
-  const mapHeight =
-    mode === "rent"
-      ? "h-[42vh] md:h-[55vh]"
-      : "h-[48vh] md:h-[60vh]";
+      if (value.length < 3)
+        return;
+
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          value + ", India"
+        )}&limit=1`
+      );
+
+      const data =
+        await res.json();
+
+      if (!data[0]) return;
+
+      const to = {
+        lat: parseFloat(
+          data[0].lat
+        ),
+
+        lon: parseFloat(
+          data[0].lon
+        ),
+      };
+
+      setToCoords(to);
+
+      getRoute(
+        fromCoords,
+        to
+      );
+    };
 
   return (
-    <section className="relative bg-gray-100 min-h-screen overflow-hidden">
 
-      {/* MAP */}
-      <div className={`relative w-full ${mapHeight}`}>
-        {fromCoords && (
+    <section className="relative h-screen overflow-hidden">
+
+      {/* ===================
+          MAP
+      =================== */}
+      {fromCoords && (
+
+        <div className="absolute inset-0">
+
           <MapView
             from={fromCoords}
             to={toCoords}
             route={route}
             mode={mode}
           />
-        )}
 
-        {/* DARK OVERLAY */}
-        <div className="absolute inset-0 bg-black/10 z-[1]" />
-      </div>
+          {/* overlay */}
+          <div
+            className="
+              absolute
+              inset-0
+              bg-gradient-to-t
+              from-black/70
+              via-black/30
+              to-black/10
+              z-[1]
+            "
+          />
+        </div>
+      )}
 
-      {/* CARD */}
-      <div className="relative z-10 -mt-10 md:-mt-16 px-3 md:px-6 pb-24">
+      {/* ===================
+          CONTENT
+      =================== */}
+      <div
+        className="
+          relative
+          z-20
+          h-full
+          max-w-7xl
+          mx-auto
+          px-4
+          flex
+          items-center
+        "
+      >
 
         <div
           className="
-          bg-white
-          rounded-[28px]
-          shadow-2xl
-          p-4
-          md:p-6
-          max-w-7xl
-          mx-auto
-          border
-        "
+            grid
+            lg:grid-cols-2
+            gap-12
+            items-center
+            w-full
+          "
         >
 
-          {/* TITLE */}
-          <h2 className="text-2xl font-bold mb-5">
-            Book Your Ride
-          </h2>
+          {/* ===================
+              LEFT CONTENT
+          =================== */}
+          <div className="hidden lg:block text-white">
 
-          {/* SERVICE BUTTONS */}
-          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
-
-            {["rent", "oneway", "airport"].map((m) => (
-
-              <button
-                key={m}
-                onClick={() => {
-                  setMode(m as Mode);
-
-                  setDrop("");
-
-                  setToCoords(null);
-
-                  setRoute([]);
-
-                  setDistance(0);
-
-                  setDuration(0);
-
-                  setSelectedCar(null);
-                }}
-                className={`
-                py-3
-                rounded-xl
-                font-semibold
-                capitalize
-                transition-all
-                duration-300
-                border
-
-                ${
-                  mode === m
-                    ? "bg-pink-500 text-white border-pink-500 shadow-lg"
-                    : "bg-white hover:bg-pink-50"
-                }
-              `}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-
-          {/* FORM */}
-          <div className="space-y-3">
-
-            {/* PICKUP */}
-            <input
-              value={pickup}
-              readOnly
+            <div
               className="
-                w-full
+                inline-flex
+                items-center
+                gap-2
+                bg-white/10
+                backdrop-blur-md
                 border
-                rounded-xl
-                px-4
-                py-4
-                bg-gray-50
-                outline-none
-                text-sm
+                border-white/20
+                px-5
+                py-2
+                rounded-full
+                mb-6
               "
-            />
+            >
+              <Car size={18} />
 
-            {/* DROP */}
-            {mode !== "rent" && (
-              <div className="relative">
+              <span className="text-sm">
+                Premium Cab Booking
+              </span>
+            </div>
 
-                <input
-                  value={drop}
-                  onChange={(e) => {
-                    setDrop(e.target.value);
+            <h1
+              className="
+                text-6xl
+                font-black
+                leading-tight
+              "
+            >
+              Ride Smarter
+              <br />
 
-                    searchPlace(e.target.value);
-                  }}
-                  placeholder="Enter Drop Location"
-                  className="
-                    w-full
-                    border
-                    rounded-xl
-                    px-4
-                    py-4
-                    outline-none
-                    text-sm
-                  "
-                />
-
-                {dropSug.length > 0 && (
-                  <div className="
-                    absolute
-                    bg-white
-                    border
-                    w-full
-                    max-h-52
-                    overflow-auto
-                    rounded-xl
-                    shadow-xl
-                    z-50
-                    mt-1
-                  ">
-                    {dropSug.map((item, i) => (
-                      <div
-                        key={i}
-                        className="
-                          p-3
-                          hover:bg-pink-50
-                          cursor-pointer
-                          text-sm
-                          border-b
-                        "
-                        onClick={async () => {
-
-                          setDrop(item.display_name);
-
-                          setDropSug([]);
-
-                          const to = {
-                            lat: parseFloat(item.lat),
-                            lon: parseFloat(item.lon),
-                          };
-
-                          setToCoords(to);
-
-                          if (fromCoords) {
-                            await getRoute(fromCoords, to);
-                          }
-                        }}
-                      >
-                        {item.display_name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* RENT PACKAGE */}
-            {mode === "rent" && (
-              <select
-                value={pkg}
-                onChange={(e) =>
-                  setPkg(e.target.value as any)
-                }
+              <span
                 className="
-                  w-full
-                  border
-                  rounded-xl
-                  px-4
-                  py-4
-                  bg-white
-                  outline-none
+                  text-transparent
+                  bg-clip-text
+                  bg-gradient-to-r
+                  from-pink-400
+                  to-rose-500
                 "
               >
-                <option value="8hr/80km">
-                  8hr / 80km
-                </option>
+                Travel Better
+              </span>
+            </h1>
 
-                <option value="12hr/120km">
-                  12hr / 120km
-                </option>
-              </select>
-            )}
-
-            {/* TIME */}
-            <input
-              type="datetime-local"
-              value={rideTime}
-              min={rideTime}
-              onChange={(e) =>
-                setRideTime(e.target.value)
-              }
+            <p
               className="
-                w-full
-                border
-                rounded-xl
-                px-4
-                py-4
-                outline-none
+                mt-6
+                text-lg
+                text-white/70
+                max-w-xl
+                leading-8
               "
-            />
+            >
+              Book city rides, airport
+              transfers and outstation
+              trips with real-time map
+              tracking and premium cab
+              experience.
+            </p>
+
+            {/* stats */}
+            <div
+              className="
+                flex
+                gap-10
+                mt-10
+              "
+            >
+
+              <div>
+                <h3
+                  className="
+                    text-4xl
+                    font-bold
+                  "
+                >
+                  500+
+                </h3>
+
+                <p className="text-white/60">
+                  Daily Trips
+                </p>
+              </div>
+
+              <div>
+                <h3
+                  className="
+                    text-4xl
+                    font-bold
+                  "
+                >
+                  24/7
+                </h3>
+
+                <p className="text-white/60">
+                  Live Support
+                </p>
+              </div>
+
+              <div>
+                <h3
+                  className="
+                    text-4xl
+                    font-bold
+                  "
+                >
+                  100%
+                </h3>
+
+                <p className="text-white/60">
+                  Safe Ride
+                </p>
+              </div>
+
+            </div>
           </div>
 
-          {/* DISTANCE */}
-          {distance > 0 && mode !== "rent" && (
-            <div className="
-              flex
-              gap-4
-              mt-4
-              text-sm
-              text-gray-600
-              font-medium
-            ">
-              <span>🚗 {distance} km</span>
+          {/* ===================
+              BOOKING CARD
+          =================== */}
+          <div
+            className="
+              w-full
+              max-w-2xl
+              lg:ml-auto
+            "
+          >
 
-              <span>⏱ {duration} min</span>
-            </div>
-          )}
+            <div
+              className="
+                bg-white/90
+                backdrop-blur-2xl
+                border
+                border-white/20
+                rounded-[32px]
+                shadow-[0_20px_80px_rgba(0,0,0,0.35)]
+                p-5
+                md:p-6
+              "
+            >
 
-          {/* CARS */}
-          {showCars && (
-            <div className="
-              grid
-              grid-cols-2
-              md:grid-cols-4
-              gap-4
-              mt-6
-            ">
+              {/* title */}
+              <div className="mb-5">
 
-              {cars.map((car) => {
+                <h2
+                  className="
+                    text-3xl
+                    md:text-4xl
+                    font-black
+                    tracking-tight
+                    mb-1
+                  "
+                >
+                  Book Your Ride
+                </h2>
 
-                const price = calculateFare(
-                  distance,
-                  mode,
-                  car as any,
-                  pkg
-                );
+                <p className="text-gray-500">
+                  Premium cab booking
+                  experience
+                </p>
+              </div>
 
-                const isActive =
-                  selectedCar === car;
+              {/* mode buttons */}
+              <div
+                className="
+                  grid
+                  grid-cols-3
+                  gap-3
+                  mb-5
+                "
+              >
 
-                return (
-                  <div
-                    key={car}
-                    onClick={() =>
-                      setSelectedCar(car)
-                    }
+                {[
+                  "rent",
+                  "oneway",
+                  "airport",
+                ].map((m) => (
+
+                  <button
+                    key={m}
+                    onClick={() => {
+
+                      setMode(
+                        m as Mode
+                      );
+
+                      setDrop("");
+
+                      setToCoords(
+                        null
+                      );
+
+                      setRoute([]);
+
+                      setDistance(0);
+
+                      setSelectedCar(
+                        ""
+                      );
+                    }}
                     className={`
-                      border
+                      h-12
                       rounded-2xl
-                      p-4
-                      text-center
-                      cursor-pointer
+                      font-semibold
+                      capitalize
                       transition-all
                       duration-300
 
                       ${
-                        isActive
-                          ? "border-pink-500 shadow-2xl scale-105 bg-pink-50"
-                          : "hover:shadow-xl hover:-translate-y-1"
+                        mode === m
+                          ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg scale-[1.02]"
+                          : "bg-gray-100 hover:bg-gray-200"
                       }
                     `}
                   >
+                    {m}
+                  </button>
+                ))}
+              </div>
 
-                    <div className="font-bold text-lg">
-                      {car}
-                    </div>
+              {/* form */}
+              <div className="space-y-4">
 
-                    <div className="
+                {/* pickup */}
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                    h-14
+                    px-5
+                    rounded-2xl
+                    bg-gray-100/80
+                    border
+                    border-transparent
+                    focus-within:border-pink-500
+                    focus-within:bg-white
+                    focus-within:shadow-lg
+                    transition-all
+                  "
+                >
+
+                  <MapPin
+                    size={18}
+                    className="text-pink-500"
+                  />
+
+                  <input
+                    value={pickup}
+                    readOnly
+                    className="
+                      bg-transparent
+                      w-full
+                      outline-none
                       text-sm
-                      text-gray-500
-                      mt-1
-                    ">
-                      AC • 4+1 • 2 Bags
-                    </div>
+                    "
+                  />
+                </div>
 
-                    <div className="
-                      text-pink-500
-                      font-bold
-                      text-3xl
-                      mt-3
-                    ">
-                      ₹{price}
-                    </div>
+                {/* rent package */}
+                {mode === "rent" ? (
+
+                  <select
+                    value={pkg}
+                    onChange={(e) =>
+                      setPkg(
+                        e.target
+                          .value as any
+                      )
+                    }
+                    className="
+                      w-full
+                      h-14
+                      px-5
+                      rounded-2xl
+                      bg-gray-100/80
+                      border
+                      border-transparent
+                      outline-none
+                      transition-all
+                      focus:border-pink-500
+                      focus:bg-white
+                      focus:shadow-lg
+                    "
+                  >
+
+                    <option value="8hr/80km">
+                      8hr / 80km
+                    </option>
+
+                    <option value="12hr/120km">
+                      12hr / 120km
+                    </option>
+
+                  </select>
+
+                ) : (
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-3
+                      h-14
+                      px-5
+                      rounded-2xl
+                      bg-gray-100/80
+                      border
+                      border-transparent
+                      focus-within:border-pink-500
+                      focus-within:bg-white
+                      focus-within:shadow-lg
+                      transition-all
+                    "
+                  >
+
+                    <MapPin
+                      size={18}
+                      className="text-pink-500"
+                    />
+
+                    <input
+                      value={drop}
+                      onChange={(e) =>
+                        searchLocation(
+                          e.target.value
+                        )
+                      }
+                      placeholder={
+                        mode ===
+                        "airport"
+                          ? "Mumbai Airport"
+                          : "Enter destination"
+                      }
+                      className="
+                        bg-transparent
+                        w-full
+                        outline-none
+                        text-sm
+                      "
+                    />
                   </div>
-                );
-              })}
+                )}
+
+                {/* date */}
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                    h-14
+                    px-5
+                    rounded-2xl
+                    bg-gray-100/80
+                    border
+                    border-transparent
+                    focus-within:border-pink-500
+                    focus-within:bg-white
+                    focus-within:shadow-lg
+                    transition-all
+                  "
+                >
+
+                  <CalendarDays
+                    size={18}
+                    className="text-pink-500"
+                  />
+
+                  <input
+                    type="datetime-local"
+                    value={rideTime}
+                    onChange={(e) =>
+                      setRideTime(
+                        e.target.value
+                      )
+                    }
+                    className="
+                      bg-transparent
+                      w-full
+                      outline-none
+                    "
+                  />
+                </div>
+              </div>
+
+              {/* distance */}
+              {distance > 0 &&
+                mode !== "rent" && (
+
+                <div
+                  className="
+                    mt-4
+                    inline-flex
+                    items-center
+                    gap-2
+                    bg-pink-50
+                    text-pink-600
+                    px-4
+                    py-2
+                    rounded-full
+                    text-sm
+                    font-medium
+                  "
+                >
+                  🚗 {distance} km route
+                </div>
+              )}
+
+              {/* cars */}
+              <div
+                className="
+                  grid
+                  grid-cols-2
+                  md:grid-cols-4
+                  gap-4
+                  mt-6
+                "
+              >
+
+                {cars.map((car) => {
+
+                  const price =
+                    calculateFare(
+                      distance,
+                      mode,
+                      car as any,
+                      pkg
+                    );
+
+                  return (
+
+                    <div
+                      key={car}
+                      onClick={() =>
+                        setSelectedCar(
+                          car
+                        )
+                      }
+                      className={`
+                        rounded-[24px]
+                        border
+                        border-gray-200
+                        bg-white
+                        p-4
+                        text-center
+                        cursor-pointer
+                        transition-all
+                        duration-300
+                        hover:shadow-2xl
+                        hover:-translate-y-1
+                        hover:border-pink-300
+
+                        ${
+                          selectedCar ===
+                          car
+                            ? "border-pink-500 bg-gradient-to-br from-pink-50 to-rose-50 shadow-xl scale-[1.02]"
+                            : ""
+                        }
+                      `}
+                    >
+
+                      <h3
+                        className="
+                          font-bold
+                          text-lg
+                        "
+                      >
+                        {car}
+                      </h3>
+
+                      <p
+                        className="
+                          text-xs
+                          text-gray-500
+                          mt-1
+                        "
+                      >
+                        AC • 4+1 • 2 Bags
+                      </p>
+
+                      <div
+                        className="
+                          text-transparent
+                          bg-clip-text
+                          bg-gradient-to-r
+                          from-pink-500
+                          to-rose-500
+                          text-2xl
+                          font-black
+                          mt-3
+                        "
+                      >
+                        ₹{price}
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* button */}
+              {selectedCar && (
+
+                <button
+                  onClick={() => {
+
+                    const price =
+                      calculateFare(
+                        distance,
+                        mode,
+                        selectedCar as any,
+                        pkg
+                      );
+
+                    router.push(
+                      `/booking?car=${selectedCar}&mode=${mode}&price=${price}`
+                    );
+                  }}
+                  className="
+                    w-full
+                    h-14
+                    mt-6
+                    rounded-2xl
+                    font-bold
+                    text-white
+                    bg-gradient-to-r
+                    from-pink-500
+                    to-rose-500
+                    hover:scale-[1.01]
+                    hover:shadow-2xl
+                    transition-all
+                    duration-300
+                  "
+                >
+                  Book {selectedCar}
+                </button>
+              )}
+
             </div>
-          )}
+          </div>
 
-          {/* BOOK BUTTON */}
-          {selectedCar && (
-            <button
-              onClick={() => {
-
-                const price = calculateFare(
-                  distance,
-                  mode,
-                  selectedCar as any,
-                  pkg
-                );
-
-                router.push(
-                  `/booking?car=${selectedCar}&mode=${mode}&price=${price}&pickup=${encodeURIComponent(
-                    pickup
-                  )}&drop=${encodeURIComponent(
-                    drop
-                  )}&distance=${distance}`
-                );
-              }}
-              className="
-                w-full
-                mt-6
-                bg-pink-500
-                hover:bg-pink-600
-                text-white
-                py-4
-                rounded-2xl
-                font-bold
-                text-lg
-                shadow-xl
-                transition-all
-              "
-            >
-              Book {selectedCar}
-            </button>
-          )}
         </div>
       </div>
     </section>

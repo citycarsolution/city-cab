@@ -6,14 +6,6 @@
   --foreground: #171717;
 }
 
-/* DARK MODE SAFE */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #ffffff;
-    --foreground: #171717;
-  }
-}
-
 /* BODY RESET */
 html, body {
   margin: 0;
@@ -25,7 +17,7 @@ html, body {
   overflow-x: hidden;
 }
 
-/* 🔥 APP ROOT FIX (VERY IMPORTANT) */
+/* APP ROOT */
 #__next {
   height: 100%;
 }
@@ -55,14 +47,7 @@ button:active {
   transform: scale(0.97);
 }
 
-/* IMAGE */
-img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-/* 🔥 LEAFLET FINAL FIX */
+/* LEAFLET FIX */
 .leaflet-container {
   width: 100% !important;
   height: 100% !important;
@@ -71,12 +56,7 @@ img {
   z-index: 0;
 }
 
-/* 🔥 TILE FIX */
-.leaflet-tile {
-  image-rendering: auto;
-}
-
-/* 🔥 MOBILE SAFE */
+/* MOBILE SAFE */
 * {
   box-sizing: border-box;
 }

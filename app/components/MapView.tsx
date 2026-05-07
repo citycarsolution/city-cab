@@ -5,7 +5,7 @@ import {
   TileLayer,
   Marker,
   Polyline,
-  useMapEvents,
+  useMap,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -22,7 +22,7 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
-// 🚗 fake cab icon
+// 🚗 cab icon
 const cabIcon = new L.Icon({
   iconUrl:
     "https://cdn-icons-png.flaticon.com/512/744/744465.png",
@@ -36,12 +36,9 @@ type Props = {
   onPickupChange?: (coords: any) => void;
 };
 
+// 📍 draggable pickup
 function DraggableMarker({ from, onChange }: any) {
   const [pos, setPos] = useState(from);
-
-  useMapEvents({
-    dragend: () => {},
-  });
 
   return (
     <Marker
@@ -59,6 +56,24 @@ function DraggableMarker({ from, onChange }: any) {
   );
 }
 
+// 🔥 auto fit map to route
+function FitBounds({ route, from, to }: any) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (route && route.length > 0) {
+      const bounds = L.latLngBounds(route);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } else if (to) {
+      map.setView([to.lat, to.lon], 13);
+    } else {
+      map.setView([from.lat, from.lon], 13);
+    }
+  }, [route, to, from, map]);
+
+  return null;
+}
+
 export default function MapView({
   from,
   to,
@@ -67,7 +82,7 @@ export default function MapView({
 }: Props) {
   const [cabs, setCabs] = useState<any[]>([]);
 
-  // 🚗 random moving cabs
+  // 🚗 initial random cabs
   useEffect(() => {
     const arr = Array.from({ length: 12 }).map(() => ({
       lat: from.lat + (Math.random() - 0.5) * 0.02,
@@ -75,6 +90,20 @@ export default function MapView({
     }));
     setCabs(arr);
   }, [from]);
+
+  // 🚀 LIVE CAB MOVEMENT (animation)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCabs((prev) =>
+        prev.map((cab) => ({
+          lat: cab.lat + (Math.random() - 0.5) * 0.001,
+          lon: cab.lon + (Math.random() - 0.5) * 0.001,
+        }))
+      );
+    }, 1500); // 🔥 speed control
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="w-full h-screen">
@@ -93,10 +122,14 @@ export default function MapView({
 
         {/* 🛣 Route */}
         {route.length > 0 && (
-          <Polyline positions={route} color="#ec4899" />
+          <Polyline
+            positions={route}
+            color="#ec4899"
+            weight={5}
+          />
         )}
 
-        {/* 🚗 CABS */}
+        {/* 🚗 LIVE CABS */}
         {cabs.map((cab, i) => (
           <Marker
             key={i}
@@ -104,6 +137,9 @@ export default function MapView({
             icon={cabIcon}
           />
         ))}
+
+        {/* 🎯 AUTO ZOOM */}
+        <FitBounds route={route} from={from} to={to} />
       </MapContainer>
     </div>
   );

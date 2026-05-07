@@ -21,14 +21,13 @@ export default function Hero() {
   const [fromCoords, setFromCoords] = useState<any>(null);
   const [toCoords, setToCoords] = useState<any>(null);
 
-  const [distance, setDistance] = useState(0);
+  const [distance, setDistance] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
   const [route, setRoute] = useState<any[]>([]);
 
-  const [pkg, setPkg] = useState<"8hr/80km" | "12hr/120km">("8hr/80km");
+  const [rideTime, setRideTime] = useState("");
 
-  const [selectedCar, setSelectedCar] = useState<string | null>(null);
-
-  // 📍 LOCATION
+  // 📍 LOCATION (fast)
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -36,17 +35,24 @@ export default function Hero() {
         const lon = pos.coords.longitude;
 
         setFromCoords({ lat, lon });
+        setPickup("Your Location");
 
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
         );
         const data = await res.json();
-
         setPickup(data.display_name);
       },
       () => setPickup("Location not allowed"),
-      { enableHighAccuracy: true, timeout: 5000 }
+      { enableHighAccuracy: true }
     );
+  }, []);
+
+  // ⏱ TIME (1 hour future)
+  useEffect(() => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    setRideTime(now.toISOString().slice(0, 16));
   }, []);
 
   // 🔍 SEARCH
@@ -54,16 +60,14 @@ export default function Hero() {
     if (q.length < 3) return;
 
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        q + ", India"
-      )}&limit=5`
+      `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=5`
     );
 
     const data = await res.json();
     setDropSug(data);
   };
 
-  // 🚗 ROUTE
+  // 🚗 ROUTE + TIME FIXED
   const getRoute = async (from: any, to: any) => {
     if (!from || !to) return;
 
@@ -73,9 +77,14 @@ export default function Hero() {
 
     const data = await res.json();
     const r = data.routes?.[0];
+
     if (!r) return;
 
-    setDistance(Number((r.distance / 1000).toFixed(1)));
+    // ✅ FIXED (no type error)
+    const km = r.distance / 1000;
+    setDistance(Math.round(km * 10) / 10);
+
+    setDuration(Math.round(r.duration / 60));
 
     const coords = r.geometry.coordinates.map((c: any) => [c[1], c[0]]);
     setRoute(coords);
@@ -88,31 +97,32 @@ export default function Hero() {
 
       setDrop("Mumbai Airport");
       setToCoords(airport);
+
       getRoute(fromCoords, airport);
     }
   }, [mode, fromCoords]);
 
-  const cars = ["WagonR", "Dzire", "Ertiga", "Innova"];
-
-  const showCars = mode === "rent" || !!toCoords;
+  // 🛑 RENT RESET
+  useEffect(() => {
+    if (mode === "rent") {
+      setToCoords(null);
+      setRoute([]);
+      setDistance(0);
+      setDuration(0);
+    }
+  }, [mode]);
 
   return (
     <div className="relative h-screen">
 
-      {/* MAP */}
+      {/* 🗺 MAP */}
       {fromCoords && (
-        <div className="absolute inset-0 z-0">
-          <MapView
-            from={fromCoords}
-            to={toCoords}
-            route={route}
-          />
-        </div>
+        <MapView from={fromCoords} to={toCoords} route={route} />
       )}
 
-      {/* CARD */}
+      {/* 📦 CARD */}
       <div className="absolute bottom-0 w-full p-3 z-10">
-        <div className="bg-white rounded-2xl p-4 shadow-xl max-h-[80vh] overflow-auto">
+        <div className="bg-white rounded-2xl p-4 shadow-xl max-h-[75vh] overflow-auto">
 
           <h2 className="font-bold text-lg mb-2">Book Your Ride</h2>
 
@@ -121,14 +131,7 @@ export default function Hero() {
             {["rent", "oneway", "airport"].map((m) => (
               <button
                 key={m}
-                onClick={() => {
-                  setMode(m as Mode);
-                  setDrop("");
-                  setToCoords(null);
-                  setRoute([]);
-                  setDistance(0);
-                  setSelectedCar(null);
-                }}
+                onClick={() => setMode(m as Mode)}
                 className={`flex-1 py-2 rounded-lg ${
                   mode === m ? "bg-pink-500 text-white" : "border"
                 }`}
@@ -150,30 +153,27 @@ export default function Hero() {
                   setDrop(e.target.value);
                   searchPlace(e.target.value);
                 }}
-                placeholder="Enter Drop Location"
+                placeholder="Enter Drop"
                 className="input"
               />
 
               {dropSug.length > 0 && (
-                <div className="absolute bg-white border w-full max-h-40 overflow-auto z-50 rounded-lg shadow">
+                <div className="absolute z-50 bg-white border w-full rounded-xl shadow max-h-40 overflow-auto">
                   {dropSug.map((item, i) => (
                     <div
                       key={i}
-                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                      onClick={async () => {
-                        setDrop(item.display_name);
-                        setDropSug([]);
-
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
                         const to = {
                           lat: parseFloat(item.lat),
                           lon: parseFloat(item.lon),
                         };
 
+                        setDrop(item.display_name);
                         setToCoords(to);
+                        setDropSug([]);
 
-                        if (fromCoords) {
-                          await getRoute(fromCoords, to);
-                        }
+                        getRoute(fromCoords, to);
                       }}
                     >
                       {item.display_name}
@@ -184,78 +184,21 @@ export default function Hero() {
             </div>
           )}
 
-          {/* RENT PACKAGE */}
-          {mode === "rent" && (
-            <select
-              value={pkg}
-              onChange={(e) => setPkg(e.target.value as any)}
-              className="input"
-            >
-              <option value="8hr/80km">8hr / 80km</option>
-              <option value="12hr/120km">12hr / 120km</option>
-            </select>
-          )}
+          {/* ⏱ TIME */}
+          <input
+            type="datetime-local"
+            value={rideTime}
+            min={rideTime}
+            onChange={(e) => setRideTime(e.target.value)}
+            className="input mt-2"
+          />
 
-          {/* DISTANCE */}
-          {distance > 0 && mode !== "rent" && (
-            <div className="text-sm text-gray-600 mb-2">
-              🚗 {distance} km
+          {/* 📏 DISTANCE + TIME */}
+          {distance > 0 && (
+            <div className="text-sm text-gray-600 mt-2 flex gap-3">
+              <span>🚗 {distance} km</span>
+              <span>⏱ {duration} min</span>
             </div>
-          )}
-
-          {/* 🚗 CAR GRID */}
-          {showCars && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
-              {cars.map((car) => {
-                const price = calculateFare(distance, mode, car as any, pkg);
-                const isActive = selectedCar === car;
-
-                return (
-                  <div
-                    key={car}
-                    onClick={() => setSelectedCar(car)}
-                    className={`cursor-pointer border rounded-xl p-3 text-center transition duration-200
-                      ${isActive
-                        ? "border-pink-500 shadow-lg scale-105"
-                        : "hover:shadow-lg hover:scale-105"
-                      }`}
-                  >
-                    <div className="font-semibold text-sm">{car}</div>
-
-                    <div className="text-xs text-gray-500">
-                      AC • 4+1 • 2 Bags
-                    </div>
-
-                    <div className="text-pink-500 font-bold mt-1 text-lg">
-                      ₹{price}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* 🔥 BOOK BUTTON */}
-          {selectedCar && (
-            <button
-              onClick={() => {
-                const price = calculateFare(
-                  distance,
-                  mode,
-                  selectedCar as any,
-                  pkg
-                );
-
-                router.push(
-                  `/booking?car=${selectedCar}&mode=${mode}&price=${price}&pickup=${encodeURIComponent(
-                    pickup
-                  )}&drop=${encodeURIComponent(drop)}&distance=${distance}`
-                );
-              }}
-              className="w-full mt-4 bg-pink-500 text-white py-3 rounded-xl font-bold text-lg shadow-lg"
-            >
-              Book {selectedCar}
-            </button>
           )}
 
         </div>

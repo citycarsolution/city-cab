@@ -107,7 +107,7 @@ export default function Hero() {
   const showCars = mode === "rent" || !!toCoords;
 
   return (
-    <div className="relative h-screen overflow-hidden">
+  <div className="relative h-[100dvh] overflow-hidden">  
 
       {/* MAP */}
       {fromCoords && (
@@ -120,9 +120,9 @@ export default function Hero() {
       <div className="absolute inset-0 bg-black/10 z-0"></div>
 
       {/* CARD */}
-      <div className="absolute bottom-0 w-full z-10 px-3 pb-4">
+      <div className="absolute bottom-4 w-full z-10 px-3 flex justify-center">
 
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-4 max-h-[75vh] overflow-auto">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-4 w-full max-w-md max-h-[75vh] overflow-auto">
 
           <h2 className="font-bold text-lg mb-3">Book Your Ride</h2>
 

@@ -1,38 +1,47 @@
 "use client";
 
 import emailjs from "@emailjs/browser";
+import { useState, useEffect } from "react";
 
-import {
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Loader2,
-  BadgeIndianRupee,
-} from "lucide-react";
+export default function BookingForm({ data }: any) {
 
-import { useState } from "react";
+  const [loading, setLoading] = useState(false);
 
-export default function BookingForm({
-  data,
-}: any) {
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    address: "",
+    payment: "Cash",
+  });
 
-  const [loading, setLoading] =
-    useState(false);
+  // =========================
+  // AUTO EMAIL DETECT
+  // =========================
+  useEffect(() => {
 
-  const [form, setForm] =
-    useState({
+    const savedEmail =
+      localStorage.getItem("user_email");
 
-      name: "",
+    if (savedEmail) {
 
-      phone: "",
+      setForm((prev) => ({
+        ...prev,
+        email: savedEmail,
+      }));
+    }
 
-      email: "",
+  }, []);
 
-      address: "",
+  // =========================
+  // PHONE VALIDATION
+  // =========================
+  const isValidPhone = (
+    phone: string
+  ) => {
 
-      payment: "Cash",
-    });
+    return /^[6-9]\d{9}$/.test(phone);
+  };
 
   // =========================
   // EMAIL VALIDATION
@@ -43,18 +52,6 @@ export default function BookingForm({
 
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
       email
-    );
-  };
-
-  // =========================
-  // PHONE VALIDATION
-  // =========================
-  const isValidPhone = (
-    phone: string
-  ) => {
-
-    return /^[6-9]\d{9}$/.test(
-      phone
     );
   };
 
@@ -100,33 +97,37 @@ export default function BookingForm({
 
       setLoading(true);
 
-      // =====================
+      // SAVE EMAIL
+      localStorage.setItem(
+        "user_email",
+        form.email
+      );
+
+      // =========================
       // SEND EMAIL
-      // =====================
+      // =========================
       await emailjs.send(
 
-        // EMAILJS SERVICE ID
-        "YOUR_SERVICE_ID",
+        // SERVICE ID
+        "service_nyf10gh",
 
-        // EMAILJS TEMPLATE ID
-        "YOUR_TEMPLATE_ID",
+        // TEMPLATE ID
+        "__ejs-test-mail-service__",
 
         {
 
-          // ===================
+          // =====================
           // BOOKING DETAILS
-          // ===================
+          // =====================
           car: data.car,
 
           mode: data.mode,
 
           price: data.price,
 
-          pickup:
-            data.pickup,
+          pickup: data.pickup,
 
-          drop:
-            data.drop,
+          drop: data.drop,
 
           distance:
             data.distance,
@@ -140,11 +141,10 @@ export default function BookingForm({
           bookingTime:
             data.bookingTime,
 
-          // ===================
+          // =====================
           // USER DETAILS
-          // ===================
-          name:
-            form.name,
+          // =====================
+          name: form.name,
 
           phone:
             `+91 ${form.phone}`,
@@ -158,15 +158,15 @@ export default function BookingForm({
           payment:
             form.payment,
 
-          // ===================
-          // RECEIVER
-          // ===================
+          // =====================
+          // RECEIVER EMAIL
+          // =====================
           to_email:
             "webappseostudio@gmail.com",
         },
 
-        // EMAILJS PUBLIC KEY
-        "YOUR_PUBLIC_KEY"
+        // PUBLIC KEY
+        "hT2h0GCkb0gmhnT2_"
       );
 
       // SUCCESS
@@ -181,14 +181,14 @@ export default function BookingForm({
 
         phone: "",
 
-        email: "",
+        email: form.email,
 
         address: "",
 
         payment: "Cash",
       });
 
-      // THANK YOU PAGE
+      // REDIRECT
       setTimeout(() => {
 
         window.location.href =
@@ -212,28 +212,16 @@ export default function BookingForm({
 
   return (
 
-    <div
-      className="
-        bg-white
-        rounded-[28px]
-        p-5
-        shadow-xl
-      "
-    >
+    <div className="bg-white rounded-3xl shadow-xl border border-pink-100 p-5">
 
       {/* HEADER */}
       <div className="mb-5">
 
-        <h3
-          className="
-            text-2xl
-            font-black
-          "
-        >
+        <h2 className="text-3xl font-bold text-black">
           Complete Booking
-        </h3>
+        </h2>
 
-        <p className="text-gray-500">
+        <p className="text-gray-500 mt-1">
           Safe & secure cab booking
         </p>
 
@@ -246,28 +234,12 @@ export default function BookingForm({
       >
 
         {/* NAME */}
-        <div
-          className="
-            flex
-            items-center
-            gap-3
-            h-12
-            px-4
-            rounded-2xl
-            bg-gray-100
-          "
-        >
-
-          <User
-            size={18}
-            className="text-pink-500"
-          />
+        <div className="bg-gray-100 rounded-2xl px-4 py-4">
 
           <input
             type="text"
-            required
-            autoComplete="name"
             placeholder="Full Name"
+            required
             value={form.name}
             onChange={(e) =>
               setForm({
@@ -276,108 +248,51 @@ export default function BookingForm({
                   e.target.value,
               })
             }
-            className="
-              bg-transparent
-              w-full
-              outline-none
-              text-sm
-            "
+            className="w-full bg-transparent outline-none text-lg"
           />
+
         </div>
 
         {/* PHONE */}
-        <div
-          className="
-            flex
-            items-center
-            gap-3
-            h-12
-            px-4
-            rounded-2xl
-            bg-gray-100
-          "
-        >
+        <div className="bg-gray-100 rounded-2xl px-4 py-4 flex items-center gap-3">
 
-          <Phone
-            size={18}
-            className="text-pink-500"
-          />
-
-          <span
-            className="
-              text-sm
-              font-semibold
-            "
-          >
+          <span className="font-semibold text-black">
             +91
           </span>
 
           <input
             type="tel"
-            required
-            autoComplete="tel"
-            inputMode="numeric"
-            maxLength={10}
             placeholder="9999999999"
+            required
+            maxLength={10}
             value={form.phone}
             onChange={(e) => {
 
-              const value =
+              const onlyNums =
                 e.target.value.replace(
                   /\D/g,
                   ""
                 );
 
-              if (
-                value.length <= 10
-              ) {
-
-                setForm({
-                  ...form,
-                  phone: value,
-                });
-              }
+              setForm({
+                ...form,
+                phone:
+                  onlyNums,
+              });
             }}
-            className="
-              bg-transparent
-              w-full
-              outline-none
-              text-sm
-            "
+            className="w-full bg-transparent outline-none text-lg"
           />
+
         </div>
 
         {/* EMAIL */}
-        <div
-          className="
-            flex
-            items-center
-            gap-3
-            h-12
-            px-4
-            rounded-2xl
-            bg-gray-100
-          "
-        >
-
-          <Mail
-            size={18}
-            className="text-pink-500"
-          />
+        <div className="bg-gray-100 rounded-2xl px-4 py-4">
 
           <input
             type="email"
+            placeholder="Enter Gmail"
             required
-
-            // AUTO GMAIL SUGGEST
-            autoComplete="email"
-
-            spellCheck={false}
-
-            placeholder="yourgmail@gmail.com"
-
             value={form.email}
-
             onChange={(e) =>
               setForm({
                 ...form,
@@ -385,43 +300,19 @@ export default function BookingForm({
                   e.target.value,
               })
             }
-
-            className="
-              bg-transparent
-              w-full
-              outline-none
-              text-sm
-            "
+            className="w-full bg-transparent outline-none text-lg"
           />
+
         </div>
 
         {/* ADDRESS */}
-        <div
-          className="
-            flex
-            items-center
-            gap-3
-            h-12
-            px-4
-            rounded-2xl
-            bg-gray-100
-          "
-        >
-
-          <MapPin
-            size={18}
-            className="text-pink-500"
-          />
+        <div className="bg-gray-100 rounded-2xl px-4 py-4">
 
           <input
             type="text"
-
-            autoComplete="street-address"
-
             placeholder="Address / Landmark"
-
+            required
             value={form.address}
-
             onChange={(e) =>
               setForm({
                 ...form,
@@ -429,98 +320,56 @@ export default function BookingForm({
                   e.target.value,
               })
             }
-
-            className="
-              bg-transparent
-              w-full
-              outline-none
-              text-sm
-            "
+            className="w-full bg-transparent outline-none text-lg"
           />
+
         </div>
 
         {/* PAYMENT */}
-        <div
-          className="
-            border-2
-            border-pink-500
-            bg-pink-50
-            rounded-2xl
-            p-4
-          "
-        >
+        <div className="border-2 border-pink-500 rounded-2xl p-4 flex justify-between items-center">
 
-          <div
-            className="
-              flex
-              items-center
-              gap-3
-            "
-          >
+          <div>
 
-            <BadgeIndianRupee
-              size={20}
-              className="text-pink-500"
-            />
+            <h3 className="font-bold text-xl">
+              Cash Payment
+            </h3>
 
-            <div>
-
-              <h4 className="font-bold">
-                Cash Payment
-              </h4>
-
-              <p
-                className="
-                  text-xs
-                  text-gray-500
-                "
-              >
-                Pay directly to driver
-                after ride completion
-              </p>
-
-            </div>
-
-            <input
-              type="radio"
-              checked
-              readOnly
-              className="ml-auto"
-            />
+            <p className="text-gray-500 text-sm">
+              Pay directly to driver after ride
+            </p>
 
           </div>
 
+          <input
+            type="radio"
+            checked
+            readOnly
+            className="w-5 h-5 accent-pink-500"
+          />
+
         </div>
 
-        {/* RIDE INFO */}
-        <div
-          className="
-            bg-gray-100
-            rounded-2xl
-            p-4
-            text-sm
-            space-y-2
-          "
-        >
+        {/* BOOKING INFO */}
+        <div className="bg-gray-100 rounded-2xl p-4 text-sm space-y-2">
 
           <p>
             <b>Date:</b>{" "}
-            {data.bookingDate}
+            {data.bookingDate || "N/A"}
           </p>
 
           <p>
             <b>Time:</b>{" "}
-            {data.bookingTime}
+            {data.bookingTime || "N/A"}
           </p>
 
           <p>
             <b>Distance:</b>{" "}
-            {data.distance} km
+            {data.distance || 0} km
           </p>
 
           <p>
             <b>Duration:</b>{" "}
-            {data.duration}
+            {data.duration || "N/A"}
           </p>
 
         </div>
@@ -529,47 +378,19 @@ export default function BookingForm({
         <button
           type="submit"
           disabled={loading}
-          className="
-            w-full
-            h-12
-            rounded-2xl
-            font-bold
-            text-white
-            bg-gradient-to-r
-            from-pink-500
-            to-rose-500
-            hover:scale-[1.01]
-            transition-all
-            duration-300
-            disabled:opacity-60
-            flex
-            items-center
-            justify-center
-            gap-2
-          "
+          className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 rounded-2xl text-lg font-bold shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50"
         >
 
-          {loading ? (
-
-            <>
-              <Loader2
-                size={18}
-                className="animate-spin"
-              />
-
-              Sending...
-            </>
-
-          ) : (
-
-            <>
-              Confirm Booking 🚖
-            </>
-          )}
+          {
+            loading
+              ? "Sending..."
+              : "Confirm Booking 🚖"
+          }
 
         </button>
 
       </form>
+
     </div>
   );
 }

@@ -10,6 +10,33 @@ export const calculateFare = (
   let fare = 0;
 
   // =========================
+  // AIRPORT RULES
+  // =========================
+  const airportRules = {
+
+    WagonR: {
+      includedKm: 10,
+      extraKm: 13,
+    },
+
+    Dzire: {
+      includedKm: 10,
+      extraKm: 15,
+    },
+
+    Ertiga: {
+      includedKm: 10,
+      extraKm: 18,
+    },
+
+    // ✅ INNOVA 40 KM INCLUDED
+    Innova: {
+      includedKm: 40,
+      extraKm: 25,
+    },
+  };
+
+  // =========================
   // RENT
   // =========================
   if (mode === "rent") {
@@ -57,8 +84,27 @@ export const calculateFare = (
   // =========================
   if (mode === "airport") {
 
+    // BASE AIRPORT FARE
     fare =
       pricing.airport.base[car];
+
+    const rule =
+      airportRules[car];
+
+    // EXTRA KM AFTER INCLUDED KM
+    if (
+      distance >
+      rule.includedKm
+    ) {
+
+      const extraDistance =
+        distance -
+        rule.includedKm;
+
+      fare +=
+        extraDistance *
+        rule.extraKm;
+    }
   }
 
   // =========================

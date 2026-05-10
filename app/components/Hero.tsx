@@ -85,7 +85,7 @@ export default function Hero() {
   ];
 
   // =======================
-  // GET USER LOCATION
+  // USER LOCATION
   // =======================
   useEffect(() => {
 
@@ -133,9 +133,7 @@ export default function Hero() {
       }
     );
 
-    // =======================
-    // DEFAULT BOOKING TIME
-    // =======================
+    // DEFAULT TIME
     const now = new Date();
 
     now.setHours(
@@ -297,7 +295,7 @@ export default function Hero() {
   };
 
   // =======================
-  // BOOK NOW
+  // BOOKING
   // =======================
   const handleBooking = () => {
 
@@ -366,7 +364,7 @@ export default function Hero() {
 
   return (
 
-    <section className="relative h-screen overflow-hidden">
+    <section className="relative min-h-screen overflow-hidden">
 
       {/* MAP */}
       {fromCoords && (
@@ -389,12 +387,14 @@ export default function Hero() {
         className="
           relative
           z-20
-          h-full
+          min-h-screen
           max-w-7xl
           mx-auto
-          px-4
+          px-3
+          sm:px-4
           flex
           items-center
+          py-10
         "
       >
 
@@ -456,23 +456,9 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p
-              className="
-                mt-6
-                text-lg
-                text-white/70
-                leading-8
-                max-w-xl
-              "
-            >
-              Book city rides,
-              airport transfers
-              and outstation trips
-              with real-time map tracking.
-            </p>
           </div>
 
-          {/* RIGHT CARD */}
+          {/* RIGHT */}
           <div
             className="
               w-full
@@ -485,8 +471,8 @@ export default function Hero() {
               className="
                 bg-white/92
                 backdrop-blur-xl
-                rounded-[32px]
-                p-5
+                rounded-[30px]
+                p-4
                 shadow-2xl
               "
             >
@@ -498,7 +484,6 @@ export default function Hero() {
                   className="
                     text-3xl
                     font-black
-                    mb-1
                   "
                 >
                   Book Your Ride
@@ -507,6 +492,7 @@ export default function Hero() {
                 <p className="text-gray-500">
                   Premium cab booking experience
                 </p>
+
               </div>
 
               {/* MODES */}
@@ -548,11 +534,10 @@ export default function Hero() {
                       rounded-2xl
                       font-semibold
                       capitalize
-                      transition-all
 
                       ${
                         mode === m
-                          ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg"
+                          ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white"
                           : "bg-gray-100"
                       }
                     `}
@@ -591,9 +576,10 @@ export default function Hero() {
                     text-sm
                   "
                 />
+
               </div>
 
-              {/* RENT / DROP */}
+              {/* RENT */}
               {mode === "rent" ? (
 
                 <select
@@ -610,7 +596,6 @@ export default function Hero() {
                     rounded-2xl
                     bg-gray-100
                     outline-none
-                    text-sm
                     mb-3
                   "
                 >
@@ -653,11 +638,7 @@ export default function Hero() {
                           e.target.value
                         )
                       }
-                      placeholder={
-                        mode === "airport"
-                          ? "Mumbai Airport"
-                          : "Search city"
-                      }
+                      placeholder="Enter drop location"
                       className="
                         bg-transparent
                         w-full
@@ -665,70 +646,9 @@ export default function Hero() {
                         text-sm
                       "
                     />
+
                   </div>
 
-                  {/* SUGGESTIONS */}
-                  {suggestions.length > 0 && (
-
-                    <div
-                      className="
-                        absolute
-                        top-full
-                        left-0
-                        right-0
-                        bg-white
-                        rounded-2xl
-                        shadow-2xl
-                        mt-2
-                        overflow-hidden
-                        z-50
-                      "
-                    >
-
-                      {suggestions.map(
-                        (
-                          item: any,
-                          index
-                        ) => (
-
-                          <button
-                            key={index}
-                            onClick={() => {
-
-                              setDrop(
-                                item.display_name
-                              );
-
-                              setSuggestions([]);
-
-                              const destination = {
-                                lat: Number(item.lat),
-                                lon: Number(item.lon),
-                              };
-
-                              setToCoords(destination);
-
-                              getRoute(
-                                fromCoords,
-                                destination
-                              );
-                            }}
-                            className="
-                              w-full
-                              text-left
-                              px-4
-                              py-3
-                              hover:bg-pink-50
-                              border-b
-                              text-sm
-                            "
-                          >
-                            {item.display_name}
-                          </button>
-                        )
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -766,6 +686,7 @@ export default function Hero() {
                     text-sm
                   "
                 />
+
               </div>
 
               {/* DISTANCE */}
@@ -791,112 +712,152 @@ export default function Hero() {
                 </div>
               )}
 
-              {/* CARS */}
-              <div
-                className="
-                  grid
-                  grid-cols-2
-                  md:grid-cols-4
-                  gap-3
-                "
-              >
+             {/* CARS */}
+<div
+  className="
+    grid
+    grid-cols-2
+    sm:grid-cols-4
+    gap-2
+    mt-4
+  "
+>
 
-                {cars.map((car) => {
+  {cars.map((car) => {
 
-                  const price =
-                    calculateFare(
-                      distance,
-                      mode,
-                      car as any,
-                      pkg
-                    );
+    const price =
+      calculateFare(
+        distance,
+        mode,
+        car as any,
+        pkg
+      );
 
-                  return (
+    let seats = "4+1";
+    let bags = 1;
 
-                    <div
-                      key={car}
-                      onClick={() =>
-                        setSelectedCar(car)
-                      }
-                      className={`
-                        rounded-2xl
-                        border
-                        p-3
-                        text-center
-                        cursor-pointer
-                        transition-all
+    let displayName = car;
 
-                        ${
-                          selectedCar === car
-                            ? "border-pink-500 bg-pink-50 shadow-lg"
-                            : "border-gray-200 bg-white"
-                        }
-                      `}
-                    >
+    // DZIRE
+    if (car === "Dzire") {
+      bags = 2;
+    }
 
-                      <h3
-                        className="
-                          font-bold
-                          text-base
-                        "
-                      >
-                        {car}
-                      </h3>
+    // ERTIGA
+    if (car === "Ertiga") {
+      seats = "5+1";
+      bags = 3;
+    }
 
-                      <p
-                        className="
-                          text-xs
-                          text-gray-500
-                          mt-1
-                        "
-                      >
-                        AC • 4+1 • 2 Bags
-                      </p>
+    // INNOVA
+    if (car === "Innova") {
 
-                      <div
-                        className="
-                          text-pink-500
-                          text-2xl
-                          font-black
-                          mt-2
-                        "
-                      >
-                        ₹{price}
-                      </div>
+      displayName =
+        "Innova Crysta";
 
-                    </div>
-                  );
-                })}
-              </div>
+      seats = "5+1";
 
-              {/* BUTTON */}
-              {selectedCar && (
+      bags = 3;
+    }
 
-                <button
-                  onClick={handleBooking}
-                  className="
-                    w-full
-                    h-12
-                    rounded-2xl
-                    mt-5
-                    font-bold
-                    text-white
-                    bg-gradient-to-r
-                    from-pink-500
-                    to-rose-500
-                    hover:scale-[1.01]
-                    transition-all
-                  "
-                >
-                  Book {selectedCar}
-                </button>
-              )}
+    return (
 
-            </div>
-          </div>
+      <div
+        key={car}
+        onClick={() =>
+          setSelectedCar(car)
+        }
+        className={`
+          rounded-[18px]
+          border
+          p-3
+          text-center
+          cursor-pointer
+          transition-all
+          min-h-[120px]
+          flex
+          flex-col
+          justify-center
 
+          ${
+            selectedCar === car
+              ? "border-pink-500 bg-pink-50 shadow-md"
+              : "border-gray-200 bg-white"
+          }
+        `}
+      >
+
+        {/* CAR NAME */}
+        <h3
+          className="
+            font-bold
+            text-[16px]
+            leading-tight
+          "
+        >
+          {displayName}
+        </h3>
+
+        {/* DETAILS */}
+        <p
+          className="
+            text-[10px]
+            text-gray-500
+            mt-1
+            leading-tight
+          "
+        >
+          AC • {seats} • {bags} Bags
+        </p>
+
+        {/* PRICE */}
+        <div
+          className="
+            text-pink-500
+            text-[20px]
+            font-black
+            mt-2
+            leading-none
+          "
+        >
+          ₹{price}
         </div>
+
       </div>
-    </section>
-  );
+    );
+  })}
+
+</div>
+
+{/* BUTTON */}
+{selectedCar && (
+
+  <button
+    onClick={handleBooking}
+    className="
+      w-full
+      h-11
+      rounded-2xl
+      mt-4
+      font-bold
+      text-white
+      bg-gradient-to-r
+      from-pink-500
+      to-rose-500
+    "
+  >
+    Book {selectedCar}
+  </button>
+)}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+);
 }

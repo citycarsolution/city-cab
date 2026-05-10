@@ -3,18 +3,16 @@
 import { useSearchParams } from "next/navigation";
 import BookingForm from "../components/BookingForm";
 
-// 🚗 CAR IMAGE MAP
+// 🚗 CAR IMAGES
 const carImages: any = {
   WagonR: "/wagonr.jpg",
   Dzire: "/dzire.png",
   Ertiga: "/ertiga.jpg",
-  Innova: "/innova.jpg",
-  Crysta: "/innova.jpg",
+  "Innova Crysta": "/innova.jpg",
 };
 
-// 📊 SERVICE DATA
+// 🚖 SERVICE DATA
 const serviceData: any = {
-
   WagonR: {
     oneWay: {
       extraKm: 13,
@@ -65,105 +63,86 @@ const serviceData: any = {
     oneWay: {
       extraKm: 20,
       extraHr: 200,
-      seats: "6+1",
+      seats: "5+1",
       bags: 3,
     },
 
     rent: {
       extraKm: 20,
       extraHr: 200,
-      seats: "6+1",
+      seats: "5+1",
       bags: 3,
     },
 
     airport: {
       extraKm: 20,
       extraHr: 200,
-      seats: "6+1",
+      seats: "5+1",
       bags: 3,
     },
   },
 
-  Innova: {
+  "Innova Crysta": {
     oneWay: {
       extraKm: 25,
       extraHr: 250,
-      seats: "6+1",
-      bags: 4,
+      seats: "5+1",
+      bags: 3,
     },
 
     rent: {
       extraKm: 25,
       extraHr: 250,
-      seats: "6+1",
-      bags: 4,
+      seats: "5+1",
+      bags: 3,
     },
 
     airport: {
       extraKm: 25,
       extraHr: 250,
-      seats: "6+1",
-      bags: 4,
+      seats: "5+1",
+      bags: 3,
     },
   },
 };
 
 export default function BookingClient() {
 
-  const params =
-    useSearchParams();
+  const params = useSearchParams();
 
-  // =========================
-  // RAW URL DATA
-  // =========================
+  // 📅 DATE + TIME
   const rawDate =
     params.get("bookingDate");
 
   const rawTime =
     params.get("bookingTime");
 
-  // =========================
-  // FORMAT DATE
-  // =========================
-  const formattedDate =
-    rawDate
+  const formattedDate = rawDate
+    ? new Date(rawDate).toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      )
+    : "N/A";
 
-      ? new Date(rawDate)
-          .toLocaleDateString(
-            "en-IN",
-            {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            }
-          )
+  const formattedTime = rawTime
+    ? new Date(
+        `1970-01-01T${rawTime}`
+      ).toLocaleTimeString(
+        "en-IN",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }
+      )
+    : "N/A";
 
-      : "N/A";
-
-  // =========================
-  // FORMAT TIME
-  // =========================
-  const formattedTime =
-    rawTime
-
-      ? new Date(
-          `1970-01-01T${rawTime}`
-        ).toLocaleTimeString(
-          "en-IN",
-          {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          }
-        )
-
-      : "N/A";
-
-  // =========================
-  // FINAL DATA
-  // =========================
-  const data = {
-
+  // 🚖 URL DATA
+  const data: any = {
     car:
       params.get("car") ||
       "WagonR",
@@ -199,19 +178,21 @@ export default function BookingClient() {
       formattedTime,
   };
 
-  // =========================
-  // CURRENT SERVICE
-  // =========================
-  const currentService =
+  // ✅ INNOVA FIX
+  if (
+    data.car === "Innova"
+  ) {
+    data.car =
+      "Innova Crysta";
+  }
 
+  // 🚖 CURRENT SERVICE
+  const currentService =
     serviceData[data.car]?.[
       data.mode === "oneway"
         ? "oneWay"
         : data.mode
-    ]
-
-    ||
-
+    ] ||
     serviceData["WagonR"]
       .oneWay;
 
@@ -224,7 +205,8 @@ export default function BookingClient() {
         flex
         justify-center
         items-start
-        p-4
+        p-3
+        md:p-6
       "
     >
 
@@ -232,8 +214,6 @@ export default function BookingClient() {
         className="
           w-full
           max-w-md
-          md:max-w-lg
-          lg:max-w-xl
           space-y-4
         "
       >
@@ -242,9 +222,9 @@ export default function BookingClient() {
         <div
           className="
             bg-white
-            rounded-[28px]
-            shadow-xl
+            rounded-[30px]
             overflow-hidden
+            shadow-lg
           "
         >
 
@@ -256,7 +236,7 @@ export default function BookingClient() {
             alt={data.car}
             className="
               w-full
-              h-48
+              h-56
               object-cover
             "
           />
@@ -275,8 +255,9 @@ export default function BookingClient() {
 
                 <h2
                   className="
-                    text-2xl
+                    text-[34px]
                     font-black
+                    leading-none
                   "
                 >
                   {data.car}
@@ -284,9 +265,8 @@ export default function BookingClient() {
 
                 <p
                   className="
-                    text-sm
                     text-gray-500
-                    mt-1
+                    mt-2
                     capitalize
                   "
                 >
@@ -297,17 +277,14 @@ export default function BookingClient() {
 
               </div>
 
-              <div
-                className="
-                  text-right
-                "
-              >
+              <div className="text-right">
 
                 <div
                   className="
-                    text-3xl
-                    font-black
                     text-pink-500
+                    text-[46px]
+                    font-black
+                    leading-none
                   "
                 >
                   ₹{data.price}
@@ -317,6 +294,7 @@ export default function BookingClient() {
                   className="
                     text-xs
                     text-gray-400
+                    mt-1
                   "
                 >
                   Final Fare
@@ -327,25 +305,24 @@ export default function BookingClient() {
             </div>
 
           </div>
+
         </div>
 
-        {/* 📊 SERVICE CARD */}
+        {/* 📊 SERVICE DETAILS */}
         <div
           className="
             bg-white
-            rounded-[28px]
+            rounded-[30px]
             shadow
             p-5
-            text-sm
-            space-y-2
+            space-y-4
           "
         >
 
           <h3
             className="
-              text-xl
+              text-2xl
               font-bold
-              mb-2
             "
           >
             Service Details
@@ -380,24 +357,22 @@ export default function BookingClient() {
         <div
           className="
             bg-white
-            rounded-[28px]
+            rounded-[30px]
             shadow
             p-5
-            text-sm
-            space-y-4
+            space-y-5
           "
         >
 
           <h3
             className="
-              text-xl
+              text-2xl
               font-bold
             "
           >
             Ride Details
           </h3>
 
-          {/* PICKUP */}
           <div>
 
             <p className="font-semibold">
@@ -407,8 +382,8 @@ export default function BookingClient() {
             <p
               className="
                 text-gray-600
-                text-sm
                 break-words
+                text-sm
               "
             >
               {data.pickup}
@@ -416,7 +391,6 @@ export default function BookingClient() {
 
           </div>
 
-          {/* DROP */}
           <div>
 
             <p className="font-semibold">
@@ -426,8 +400,8 @@ export default function BookingClient() {
             <p
               className="
                 text-gray-600
-                text-sm
                 break-words
+                text-sm
               "
             >
               {data.drop}
@@ -435,7 +409,6 @@ export default function BookingClient() {
 
           </div>
 
-          {/* DATE & TIME */}
           <div
             className="
               grid
@@ -450,12 +423,7 @@ export default function BookingClient() {
                 Date
               </p>
 
-              <p
-                className="
-                  text-gray-600
-                  text-sm
-                "
-              >
+              <p className="text-gray-600">
                 {data.bookingDate}
               </p>
 
@@ -467,12 +435,7 @@ export default function BookingClient() {
                 Time
               </p>
 
-              <p
-                className="
-                  text-gray-600
-                  text-sm
-                "
-              >
+              <p className="text-gray-600">
                 {data.bookingTime}
               </p>
 
@@ -480,19 +443,13 @@ export default function BookingClient() {
 
           </div>
 
-          {/* DISTANCE */}
           <div>
 
             <p className="font-semibold">
               Route
             </p>
 
-            <p
-              className="
-                text-pink-500
-                text-sm
-              "
-            >
+            <p className="text-pink-500">
               🚖 {data.distance} km
               {" • "}
               {data.duration}
@@ -502,12 +459,11 @@ export default function BookingClient() {
 
         </div>
 
-        {/* 👤 FORM */}
-        <BookingForm
-          data={data}
-        />
+        {/* 👤 BOOKING FORM */}
+        <BookingForm data={data} />
 
       </div>
+
     </div>
   );
 }

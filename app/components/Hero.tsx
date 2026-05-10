@@ -49,6 +49,8 @@ export default function Hero() {
   const [suggestions, setSuggestions] =
     useState<any[]>([]);
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   const [fromCoords, setFromCoords] =
     useState<any>(null);
 
@@ -244,7 +246,7 @@ export default function Hero() {
       };
 
       setDrop(
-        "Mumbai Airport"
+        "Mumbai Airport (BOM) - International Terminal"
       );
 
       setToCoords(airport);
@@ -265,13 +267,13 @@ export default function Hero() {
   ) => {
 
     setDrop(value);
+    setShowSuggestions(true);
 
     if (
       value.trim().length < 2
     ) {
 
       setSuggestions([]);
-
       return;
     }
 
@@ -280,7 +282,7 @@ export default function Hero() {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           value
-        )}&countrycodes=in&limit=5`
+        )}&countrycodes=in&limit=6`
       );
 
       const data =
@@ -291,6 +293,29 @@ export default function Hero() {
     } catch (err) {
 
       console.log(err);
+    }
+  };
+
+  // =======================
+  // SELECT SUGGESTION
+  // =======================
+  const selectSuggestion = async (
+    suggestion: any
+  ) => {
+
+    const name = suggestion.display_name;
+    const lat = parseFloat(suggestion.lat);
+    const lon = parseFloat(suggestion.lon);
+
+    setDrop(name);
+    setSuggestions([]);
+    setShowSuggestions(false);
+
+    const toCoord = { lat, lon };
+    setToCoords(toCoord);
+
+    if (fromCoords) {
+      await getRoute(fromCoords, toCoord);
     }
   };
 
@@ -361,6 +386,18 @@ export default function Hero() {
         .replace(/\s+/g, "")
     );
   };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.suggestions-container')) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   return (
 
@@ -522,12 +559,12 @@ export default function Hero() {
                       setDrop("");
 
                       setSuggestions([]);
-
+                      setShowSuggestions(false);
                       setSelectedCar("");
-
                       setDistance(0);
-
                       setDuration("");
+                      setToCoords(null);
+                      setRoute([]);
                     }}
                     className={`
                       h-12
@@ -579,7 +616,7 @@ export default function Hero() {
 
               </div>
 
-              {/* RENT */}
+              {/* RENT / ONEWAY / AIRPORT */}
               {mode === "rent" ? (
 
                 <select
@@ -612,7 +649,7 @@ export default function Hero() {
 
               ) : (
 
-                <div className="relative mb-3">
+                <div className="relative mb-3 suggestions-container">
 
                   <div
                     className="
@@ -638,7 +675,13 @@ export default function Hero() {
                           e.target.value
                         )
                       }
-                      placeholder="Enter drop location"
+                      onFocus={() => setShowSuggestions(true)}
+                      placeholder={
+                        mode === "airport" 
+                          ? "Airport will be auto-set" 
+                          : "Enter drop location"
+                      }
+                      readOnly={mode === "airport"}
                       className="
                         bg-transparent
                         w-full
@@ -649,6 +692,21 @@ export default function Hero() {
 
                   </div>
 
+                  {/* SUGGESTIONS DROPDOWN */}
+                  {showSuggestions && mode !== "airport" && suggestions.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                      {suggestions.map((s, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => selectSuggestion(s)}
+                          className="px-4 py-2 hover:bg-pink-50 cursor-pointer flex items-start gap-2 border-b border-gray-100 last:border-0"
+                        >
+                          <MapPin size={16} className="text-pink-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm text-gray-700">{s.display_name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -689,9 +747,8 @@ export default function Hero() {
 
               </div>
 
-              {/* DISTANCE */}
-              {distance > 0 &&
-                mode !== "rent" && (
+              {/* DISTANCE & DURATION - NOW SHOWS FOR ONEWAY AND AIRPORT */}
+              {distance > 0 && mode !== "rent" && (
 
                 <div
                   className="
@@ -712,152 +769,152 @@ export default function Hero() {
                 </div>
               )}
 
-             {/* CARS */}
-<div
-  className="
-    grid
-    grid-cols-2
-    sm:grid-cols-4
-    gap-2
-    mt-4
-  "
->
+              {/* CARS */}
+              <div
+                className="
+                  grid
+                  grid-cols-2
+                  sm:grid-cols-4
+                  gap-2
+                  mt-4
+                "
+              >
 
-  {cars.map((car) => {
+                {cars.map((car) => {
 
-    const price =
-      calculateFare(
-        distance,
-        mode,
-        car as any,
-        pkg
-      );
+                  const price =
+                    calculateFare(
+                      distance,
+                      mode,
+                      car as any,
+                      pkg
+                    );
 
-    let seats = "4+1";
-    let bags = 1;
+                  let seats = "4+1";
+                  let bags = 1;
 
-    let displayName = car;
+                  let displayName = car;
 
-    // DZIRE
-    if (car === "Dzire") {
-      bags = 2;
-    }
+                  // DZIRE
+                  if (car === "Dzire") {
+                    bags = 2;
+                  }
 
-    // ERTIGA
-    if (car === "Ertiga") {
-      seats = "5+1";
-      bags = 3;
-    }
+                  // ERTIGA
+                  if (car === "Ertiga") {
+                    seats = "5+1";
+                    bags = 3;
+                  }
 
-    // INNOVA
-    if (car === "Innova") {
+                  // INNOVA
+                  if (car === "Innova") {
 
-      displayName =
-        "Innova Crysta";
+                    displayName =
+                      "Innova Crysta";
 
-      seats = "5+1";
+                    seats = "5+1";
 
-      bags = 3;
-    }
+                    bags = 3;
+                  }
 
-    return (
+                  return (
 
-      <div
-        key={car}
-        onClick={() =>
-          setSelectedCar(car)
-        }
-        className={`
-          rounded-[18px]
-          border
-          p-3
-          text-center
-          cursor-pointer
-          transition-all
-          min-h-[120px]
-          flex
-          flex-col
-          justify-center
+                    <div
+                      key={car}
+                      onClick={() =>
+                        setSelectedCar(car)
+                      }
+                      className={`
+                        rounded-[18px]
+                        border
+                        p-3
+                        text-center
+                        cursor-pointer
+                        transition-all
+                        min-h-[120px]
+                        flex
+                        flex-col
+                        justify-center
 
-          ${
-            selectedCar === car
-              ? "border-pink-500 bg-pink-50 shadow-md"
-              : "border-gray-200 bg-white"
-          }
-        `}
-      >
+                        ${
+                          selectedCar === car
+                            ? "border-pink-500 bg-pink-50 shadow-md"
+                            : "border-gray-200 bg-white"
+                        }
+                      `}
+                    >
 
-        {/* CAR NAME */}
-        <h3
-          className="
-            font-bold
-            text-[16px]
-            leading-tight
-          "
-        >
-          {displayName}
-        </h3>
+                      {/* CAR NAME */}
+                      <h3
+                        className="
+                          font-bold
+                          text-[16px]
+                          leading-tight
+                        "
+                      >
+                        {displayName}
+                      </h3>
 
-        {/* DETAILS */}
-        <p
-          className="
-            text-[10px]
-            text-gray-500
-            mt-1
-            leading-tight
-          "
-        >
-          AC • {seats} • {bags} Bags
-        </p>
+                      {/* DETAILS */}
+                      <p
+                        className="
+                          text-[10px]
+                          text-gray-500
+                          mt-1
+                          leading-tight
+                        "
+                      >
+                        AC • {seats} • {bags} Bags
+                      </p>
 
-        {/* PRICE */}
-        <div
-          className="
-            text-pink-500
-            text-[20px]
-            font-black
-            mt-2
-            leading-none
-          "
-        >
-          ₹{price}
+                      {/* PRICE */}
+                      <div
+                        className="
+                          text-pink-500
+                          text-[20px]
+                          font-black
+                          mt-2
+                          leading-none
+                        "
+                      >
+                        ₹{price}
+                      </div>
+
+                    </div>
+                  );
+                })}
+
+              </div>
+
+              {/* BUTTON */}
+              {selectedCar && (
+
+                <button
+                  onClick={handleBooking}
+                  className="
+                    w-full
+                    h-11
+                    rounded-2xl
+                    mt-4
+                    font-bold
+                    text-white
+                    bg-gradient-to-r
+                    from-pink-500
+                    to-rose-500
+                  "
+                >
+                  Book {selectedCar}
+                </button>
+              )}
+
+            </div>
+
+          </div>
+
         </div>
 
       </div>
-    );
-  })}
 
-</div>
-
-{/* BUTTON */}
-{selectedCar && (
-
-  <button
-    onClick={handleBooking}
-    className="
-      w-full
-      h-11
-      rounded-2xl
-      mt-4
-      font-bold
-      text-white
-      bg-gradient-to-r
-      from-pink-500
-      to-rose-500
-    "
-  >
-    Book {selectedCar}
-  </button>
-)}
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-);
+    </section>
+  );
 }

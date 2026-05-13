@@ -87,9 +87,20 @@ export default function Hero() {
   ];
 
   // =======================
-  // USER LOCATION
-  // =======================
-  useEffect(() => {
+// USER LOCATION
+// =======================
+useEffect(() => {
+
+  const getUserLocation = () => {
+
+    if (!navigator.geolocation) {
+
+      setPickup(
+        "Geolocation not supported"
+      );
+
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
 
@@ -127,33 +138,45 @@ export default function Hero() {
         }
       },
 
-      () => {
+      (err) => {
+
+        console.log(err);
 
         setPickup(
-          "Location access denied"
+          "Enable location access"
         );
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
       }
     );
+  };
 
-    // DEFAULT TIME
-    const now = new Date();
+  // DIRECT POPUP
+  getUserLocation();
 
-    now.setHours(
-      now.getHours() + 1
-    );
+  // DEFAULT TIME
+  const now = new Date();
 
-    const formatted =
-      new Date(
-        now.getTime() -
-          now.getTimezoneOffset() *
-            60000
-      )
-        .toISOString()
-        .slice(0, 16);
+  now.setHours(
+    now.getHours() + 1
+  );
 
-    setRideTime(formatted);
+  const formatted =
+    new Date(
+      now.getTime() -
+      now.getTimezoneOffset() *
+        60000
+    )
+      .toISOString()
+      .slice(0, 16);
 
-  }, []);
+  setRideTime(formatted);
+
+}, []);
 
   // =======================
   // ROUTE API

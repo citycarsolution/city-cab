@@ -13,10 +13,17 @@ import L from "leaflet";
 
 import "leaflet/dist/leaflet.css";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-// ✅ MARKER FIX
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// =======================
+// FIX LEAFLET ICON
+// =======================
+delete (L.Icon.Default.prototype as any)
+  ._getIconUrl;
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -29,7 +36,9 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
-// 🚕 CAB ICON
+// =======================
+// CAB ICON
+// =======================
 const cabIcon = new L.Icon({
   iconUrl:
     "https://cdn-icons-png.flaticon.com/512/744/744465.png",
@@ -37,7 +46,9 @@ const cabIcon = new L.Icon({
   iconSize: [32, 32],
 });
 
-// 📍 USER ICON
+// =======================
+// USER ICON
+// =======================
 const userIcon = new L.Icon({
   iconUrl:
     "https://cdn-icons-png.flaticon.com/512/149/149060.png",
@@ -45,7 +56,9 @@ const userIcon = new L.Icon({
   iconSize: [35, 35],
 });
 
-// ✈️ AIRPORT ICON
+// =======================
+// AIRPORT ICON
+// =======================
 const airportIcon = new L.Icon({
   iconUrl:
     "https://cdn-icons-png.flaticon.com/512/3097/3097144.png",
@@ -53,6 +66,9 @@ const airportIcon = new L.Icon({
   iconSize: [35, 35],
 });
 
+// =======================
+// TYPES
+// =======================
 type Props = {
   from: {
     lat: number;
@@ -66,10 +82,15 @@ type Props = {
 
   route?: any[];
 
-  mode: "rent" | "oneway" | "airport";
+  mode:
+    | "rent"
+    | "oneway"
+    | "airport";
 };
 
-// 🎯 AUTO FIT MAP
+// =======================
+// AUTO FIT
+// =======================
 function FitBounds({
   from,
   to,
@@ -77,12 +98,15 @@ function FitBounds({
   from: any;
   to: any;
 }) {
+
   const map = useMap();
 
   useEffect(() => {
+
     if (!from) return;
 
     if (to) {
+
       map.fitBounds(
         [
           [from.lat, from.lon],
@@ -92,14 +116,23 @@ function FitBounds({
           padding: [60, 60],
         }
       );
+
     } else {
-      map.setView([from.lat, from.lon], 13);
+
+      map.setView(
+        [from.lat, from.lon],
+        13
+      );
     }
+
   }, [from, to, map]);
 
   return null;
 }
 
+// =======================
+// MAIN COMPONENT
+// =======================
 export default function MapView({
   from,
   to,
@@ -107,9 +140,12 @@ export default function MapView({
   mode,
 }: Props) {
 
-  const [cabs, setCabs] = useState<any[]>([]);
+  const [cabs, setCabs] =
+    useState<any[]>([]);
 
-  // 🚖 RANDOM CABS
+  // =======================
+  // RANDOM CABS
+  // =======================
   useEffect(() => {
 
     if (!from) return;
@@ -117,29 +153,36 @@ export default function MapView({
     const arr = Array.from({
       length: 12,
     }).map(() => ({
+
       lat:
         from.lat +
-        (Math.random() - 0.5) * 0.03,
+        (Math.random() - 0.5) *
+          0.03,
 
       lon:
         from.lon +
-        (Math.random() - 0.5) * 0.03,
+        (Math.random() - 0.5) *
+          0.03,
     }));
 
     setCabs(arr);
 
   }, [from]);
 
-  // 🗺️ MAP STYLE
+  // =======================
+  // MAP STYLE
+  // =======================
   const tileUrl = useMemo(() => {
 
     // RENT
     if (mode === "rent") {
+
       return "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     }
 
     // ONEWAY
     if (mode === "oneway") {
+
       return "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
     }
 
@@ -148,15 +191,34 @@ export default function MapView({
 
   }, [mode]);
 
+  // =======================
+  // SAFETY
+  // =======================
+  if (!from) return null;
+
   return (
+
     <MapContainer
-      center={[from.lat, from.lon]}
+
+      key={`${from?.lat}-${from?.lon}-${to?.lat}-${to?.lon}-${mode}`}
+
+      center={[
+        from.lat,
+        from.lon,
+      ]}
+
       zoom={13}
+
       scrollWheelZoom={true}
-      className="w-full h-full z-0"
+
+      className="
+        w-full
+        h-full
+        z-0
+      "
     >
 
-      {/* MAP STYLE */}
+      {/* MAP TILE */}
       <TileLayer
         attribution="&copy; OpenStreetMap contributors"
         url={tileUrl}
@@ -168,83 +230,114 @@ export default function MapView({
         to={to}
       />
 
-      {/* 📍 USER LOCATION */}
+      {/* USER LOCATION */}
       <Marker
-        position={[from.lat, from.lon]}
+        position={[
+          from.lat,
+          from.lon,
+        ]}
         icon={userIcon}
       >
+
         <Popup>
           Your Current Location
         </Popup>
+
       </Marker>
 
-      {/* 🚕 RENT MODE CABS */}
+      {/* RENT MODE */}
       {mode === "rent" &&
+
         cabs.map((cab, i) => (
+
           <Marker
             key={i}
-            position={[cab.lat, cab.lon]}
+            position={[
+              cab.lat,
+              cab.lon,
+            ]}
             icon={cabIcon}
           >
+
             <Popup>
               Nearby Cab
             </Popup>
+
           </Marker>
         ))}
 
-      {/* 🛣️ ONEWAY ROUTE */}
+      {/* ONEWAY */}
       {mode === "oneway" &&
         route.length > 0 && (
-          <>
-            {/* DESTINATION */}
-            {to && (
-              <Marker
-                position={[to.lat, to.lon]}
-              >
-                <Popup>
-                  Destination
-                </Popup>
-              </Marker>
-            )}
 
-            {/* ROUTE LINE */}
-            <Polyline
-              positions={route}
-              pathOptions={{
-                color: "#ec4899",
-                weight: 6,
-              }}
-            />
-          </>
-        )}
+        <>
 
-      {/* ✈️ AIRPORT MODE */}
+          {/* DESTINATION */}
+          {to && (
+
+            <Marker
+              position={[
+                to.lat,
+                to.lon,
+              ]}
+            >
+
+              <Popup>
+                Destination
+              </Popup>
+
+            </Marker>
+          )}
+
+          {/* ROUTE */}
+          <Polyline
+            positions={route}
+            pathOptions={{
+              color: "#ec4899",
+              weight: 6,
+            }}
+          />
+
+        </>
+      )}
+
+      {/* AIRPORT */}
       {mode === "airport" &&
         route.length > 0 && (
-          <>
-            {/* AIRPORT */}
-            {to && (
-              <Marker
-                position={[to.lat, to.lon]}
-                icon={airportIcon}
-              >
-                <Popup>
-                  Airport
-                </Popup>
-              </Marker>
-            )}
 
-            {/* AIRPORT ROUTE */}
-            <Polyline
-              positions={route}
-              pathOptions={{
-                color: "#22c55e",
-                weight: 6,
-                dashArray: "10,10",
-              }}
-            />
-          </>
-        )}
+        <>
+
+          {/* AIRPORT */}
+          {to && (
+
+            <Marker
+              position={[
+                to.lat,
+                to.lon,
+              ]}
+              icon={airportIcon}
+            >
+
+              <Popup>
+                Airport
+              </Popup>
+
+            </Marker>
+          )}
+
+          {/* ROUTE */}
+          <Polyline
+            positions={route}
+            pathOptions={{
+              color: "#22c55e",
+              weight: 6,
+              dashArray: "10,10",
+            }}
+          />
+
+        </>
+      )}
+
     </MapContainer>
   );
 }

@@ -2,9 +2,24 @@ import { pricing } from "./pricing";
 
 export const calculateFare = (
   distance: number,
-  mode: "rent" | "oneway" | "airport",
-  car: "WagonR" | "Dzire" | "Ertiga" | "Innova",
-  pkg?: "8hr/80km" | "12hr/120km"
+
+  mode:
+    | "rent"
+    | "oneway"
+    | "airport"
+    | "roundtrip",
+
+  car:
+    | "WagonR"
+    | "Dzire"
+    | "Ertiga"
+    | "Innova",
+
+  pkg?: "8hr/80km" | "12hr/120km",
+
+  rideTime?: string,
+
+  returnTime?: string
 ) => {
 
   let fare = 0;
@@ -29,7 +44,6 @@ export const calculateFare = (
       extraKm: 18,
     },
 
-    // ✅ INNOVA 40 KM INCLUDED
     Innova: {
       includedKm: 40,
       extraKm: 25,
@@ -77,6 +91,112 @@ export const calculateFare = (
         base +
         extraKm * perKm;
     }
+  }
+
+  // =========================
+  // ROUNDTRIP
+  // =========================
+  if (mode === "roundtrip") {
+
+    // USER MUST SELECT RETURN DATE
+    if (
+      !distance ||
+      !rideTime ||
+      !returnTime
+    ) {
+      return 0;
+    }
+
+// =====================
+// DAYS CALCULATION
+// =====================
+
+const start =
+  new Date(rideTime);
+
+const end =
+  new Date(returnTime);
+
+// ONLY DATE
+const startOnly =
+  new Date(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate()
+  );
+
+const endOnly =
+  new Date(
+    end.getFullYear(),
+    end.getMonth(),
+    end.getDate()
+  );
+
+// DATE DIFFERENCE
+const diffMs =
+  endOnly.getTime() -
+  startOnly.getTime();
+
+// TOTAL DAYS
+let totalDays =
+  Math.floor(
+    diffMs /
+      (1000 * 60 * 60 * 24)
+  ) + 1;
+
+// MINIMUM 1 DAY
+if (totalDays < 1) {
+  totalDays = 1;
+}
+
+    // =====================
+    // TOTAL ROUNDTRIP KM
+    // =====================
+    const totalKm =
+      distance * 2;
+
+    // =====================
+    // MINIMUM 300 KM / DAY
+    // =====================
+    const minimumKm =
+      totalDays * 300;
+
+    // =====================
+    // BILLABLE KM
+    // =====================
+    const billableKm =
+      Math.max(
+        totalKm,
+        minimumKm
+      );
+
+    // =====================
+    // PER KM RATE
+    // =====================
+    const perKm = {
+
+      WagonR: 12,
+
+      Dzire: 13,
+
+      Ertiga: 18,
+
+      Innova: 23,
+    };
+
+    // =====================
+    // DRIVER ALLOWANCE
+    // =====================
+    const driverAllowance =
+      totalDays * 500;
+
+    // =====================
+    // FINAL ROUNDTRIP FARE
+    // =====================
+    fare =
+      billableKm *
+        perKm[car] +
+      driverAllowance;
   }
 
   // =========================

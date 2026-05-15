@@ -85,7 +85,8 @@ type Props = {
   mode:
     | "rent"
     | "oneway"
-    | "airport";
+    | "airport"
+    | "roundtrip";
 };
 
 // =======================
@@ -186,6 +187,12 @@ export default function MapView({
       return "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
     }
 
+    // ROUNDTRIP
+    if (mode === "roundtrip") {
+
+      return "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    }
+
     // AIRPORT
     return "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
@@ -200,7 +207,7 @@ export default function MapView({
 
     <MapContainer
 
-      key={`${from?.lat}-${from?.lon}-${to?.lat}-${to?.lon}-${mode}`}
+      key={`${mode}-${from?.lat}-${from?.lon}-${to?.lat}-${to?.lon}`}
 
       center={[
         from.lat,
@@ -266,8 +273,9 @@ export default function MapView({
           </Marker>
         ))}
 
-      {/* ONEWAY */}
-      {mode === "oneway" &&
+      {/* ONEWAY + ROUNDTRIP */}
+      {(mode === "oneway" ||
+        mode === "roundtrip") &&
         route.length > 0 && (
 
         <>
@@ -293,7 +301,11 @@ export default function MapView({
           <Polyline
             positions={route}
             pathOptions={{
-              color: "#ec4899",
+              color:
+                mode === "roundtrip"
+                  ? "#2563eb"
+                  : "#ec4899",
+
               weight: 6,
             }}
           />
@@ -325,7 +337,7 @@ export default function MapView({
             </Marker>
           )}
 
-          {/* ROUTE */}
+          {/* AIRPORT ROUTE */}
           <Polyline
             positions={route}
             pathOptions={{

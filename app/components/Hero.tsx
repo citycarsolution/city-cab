@@ -28,53 +28,58 @@ const MapView = dynamic(
 type Mode =
   | "rent"
   | "oneway"
-  | "airport";
+  | "airport"
+  | "roundtrip";
 
 export default function Hero() {
 
   const router = useRouter();
 
   // =======================
-  // STATES
-  // =======================
-  const [mode, setMode] =
-    useState<Mode>("rent");
+// STATES
+// =======================
+const [mode, setMode] =
+  useState<Mode>("rent");
 
-  const [pickup, setPickup] =
-    useState("Detecting location...");
+const [pickup, setPickup] =
+  useState("Detecting location...");
 
-  const [drop, setDrop] =
-    useState("");
+const [drop, setDrop] =
+  useState("");
 
-  const [suggestions, setSuggestions] =
-    useState<any[]>([]);
+const [suggestions, setSuggestions] =
+  useState<any[]>([]);
 
-  const [showSuggestions, setShowSuggestions] = useState(false);
+const [showSuggestions, setShowSuggestions] =
+  useState(false);
 
-  const [fromCoords, setFromCoords] =
-    useState<any>(null);
+const [fromCoords, setFromCoords] =
+  useState<any>(null);
 
-  const [toCoords, setToCoords] =
-    useState<any>(null);
+const [toCoords, setToCoords] =
+  useState<any>(null);
 
-  const [route, setRoute] =
-    useState<any[]>([]);
+const [route, setRoute] =
+  useState<any[]>([]);
 
-  const [distance, setDistance] =
-    useState(0);
+const [distance, setDistance] =
+  useState(0);
 
-  const [duration, setDuration] =
-    useState("");
+const [duration, setDuration] =
+  useState("");
 
-  const [rideTime, setRideTime] =
-    useState("");
+const [rideTime, setRideTime] =
+  useState("");
 
-  const [selectedCar, setSelectedCar] =
-    useState("");
+const [returnTime, setReturnTime] =
+  useState("");
 
-  const [pkg, setPkg] = useState<
-    "8hr/80km" | "12hr/120km"
-  >("8hr/80km");
+const [selectedCar, setSelectedCar] =
+  useState("");
+
+const [pkg, setPkg] = useState<
+  "8hr/80km" | "12hr/120km"
+>("8hr/80km");
 
   // =======================
   // CARS
@@ -119,41 +124,58 @@ useEffect(() => {
 
         try {
 
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-          );
+        const res = await fetch(
 
-          const data =
-            await res.json();
+  `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=69eca1b5532c483991038b8fa49f62d2`
 
-          setPickup(
-            data.display_name
-          );
+);
 
-        } catch {
+const data =
+  await res.json();
 
-          setPickup(
-            "Current Location"
-          );
-        }
-      },
+if (
+  data.features &&
+  data.features.length > 0
+) {
 
-      (err) => {
+  setPickup(
 
-        console.log(err);
+    data.features[0]
+      .properties
+      .formatted
+  );
 
-        setPickup(
-          "Enable location access"
-        );
-      },
+} else {
 
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-  };
+  setPickup(
+    "Current Location"
+  );
+}
+
+} catch {
+
+  setPickup(
+    "Current Location"
+  );
+}
+},
+
+(err) => {
+
+  console.log(err);
+
+  setPickup(
+    "Enable location access"
+  );
+},
+
+{
+  enableHighAccuracy: true,
+  timeout: 10000,
+  maximumAge: 0,
+}
+);
+};
 
   // DIRECT POPUP
   getUserLocation();
@@ -188,70 +210,82 @@ useEffect(() => {
 
     try {
 
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
-      );
+    const res = await fetch(
+  `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`
+);
 
-      const data =
-        await res.json();
+const data =
+  await res.json();
 
-      const r =
-        data.routes?.[0];
+const r =
+  data.routes?.[0];
 
-      if (!r) return;
+if (!r) return;
 
-      // DISTANCE
-      const km =
-        Number(
-          (
-            r.distance / 1000
-          ).toFixed(1)
-        );
+// DISTANCE
+const km =
+  Number(
+    (
+      r.distance / 1000
+    ).toFixed(1)
+  );
 
-      setDistance(km);
+setDistance(km);
 
-      // DURATION
-      const totalMinutes =
-        Math.ceil(
-          r.duration / 60
-        );
+// =======================
+// REALISTIC MUMBAI TRAFFIC TIME
+// =======================
+const trafficMultiplier =
+  km > 100
+    ? 1.6
+    : km > 50
+    ? 1.45
+    : 1.3;
 
-      const hours =
-        Math.floor(
-          totalMinutes / 60
-        );
+// DURATION
+const totalMinutes =
+  Math.ceil(
+    (
+      r.duration / 60
+    ) * trafficMultiplier
+  );
 
-      const minutes =
-        totalMinutes % 60;
+const hours =
+  Math.floor(
+    totalMinutes / 60
+  );
 
-      if (hours > 0) {
+const minutes =
+  totalMinutes % 60;
 
-        setDuration(
-          `${hours} hr ${minutes} min`
-        );
+if (hours > 0) {
 
-      } else {
+  setDuration(
+    `${hours} hr ${minutes} min`
+  );
 
-        setDuration(
-          `${minutes} min`
-        );
-      }
+} else {
 
-      // ROUTE
-      setRoute(
-        r.geometry.coordinates.map(
-          (c: any) => [
-            c[1],
-            c[0],
-          ]
-        )
-      );
+  setDuration(
+    `${minutes} min`
+  );
+}
 
-    } catch (err) {
+// ROUTE
+setRoute(
+  r.geometry.coordinates.map(
+    (c: any) => [
+      c[1],
+      c[0],
+    ]
+  )
+);
 
-      console.log(err);
-    }
-  };
+} catch (err) {
+
+  console.log(err);
+}
+};
 
   // =======================
   // AIRPORT AUTO
@@ -302,45 +336,64 @@ useEffect(() => {
 
     try {
 
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          value
-        )}&countrycodes=in&limit=6`
-      );
+     const res = await fetch(
 
-      const data =
-        await res.json();
+  `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(
+    value
+  )}&limit=6&filter=countrycode:in&apiKey=69eca1b5532c483991038b8fa49f62d2`
 
-      setSuggestions(data);
+);
 
-    } catch (err) {
+const data =
+  await res.json();
 
-      console.log(err);
-    }
+setSuggestions(
+  data.features || []
+);
+
+} catch (err) {
+
+  console.log(err);
+}
+};
+
+// =======================
+// SELECT SUGGESTION
+// =======================
+const selectSuggestion = async (
+  suggestion: any
+) => {
+
+  const name =
+    suggestion.properties.formatted;
+
+  const lat =
+    suggestion.properties.lat;
+
+  const lon =
+    suggestion.properties.lon;
+
+  setDrop(name);
+
+  setSuggestions([]);
+
+  setShowSuggestions(false);
+
+  const toCoord = {
+    lat,
+    lon,
   };
 
-  // =======================
-  // SELECT SUGGESTION
-  // =======================
-  const selectSuggestion = async (
-    suggestion: any
-  ) => {
+  setToCoords(toCoord);
 
-    const name = suggestion.display_name;
-    const lat = parseFloat(suggestion.lat);
-    const lon = parseFloat(suggestion.lon);
+  if (fromCoords) {
 
-    setDrop(name);
-    setSuggestions([]);
-    setShowSuggestions(false);
-
-    const toCoord = { lat, lon };
-    setToCoords(toCoord);
-
-    if (fromCoords) {
-      await getRoute(fromCoords, toCoord);
-    }
-  };
+    await getRoute(
+      fromCoords,
+      toCoord
+    );
+  }
+};
 
   // =======================
   // BOOKING
@@ -355,15 +408,15 @@ useEffect(() => {
 
       return;
     }
-
-    const price =
-      calculateFare(
-        distance,
-        mode,
-        selectedCar as any,
-        pkg
-      );
-
+const price =
+  calculateFare(
+    distance,
+    mode,
+    selectedCar as any,
+    pkg,
+    rideTime,
+    returnTime
+  );
     const bookingDate =
       rideTime.split("T")[0];
 
@@ -559,7 +612,7 @@ useEffect(() => {
               <div
                 className="
                   grid
-                  grid-cols-3
+                  grid-cols-4
                   gap-3
                   mb-4
                 "
@@ -569,7 +622,8 @@ useEffect(() => {
                   "rent",
                   "oneway",
                   "airport",
-                ].map((m) => (
+                  "roundtrip",
+                   ].map((m) => (
 
                   <button
                     key={m}
@@ -672,7 +726,7 @@ useEffect(() => {
 
               ) : (
 
-                <div className="relative mb-3 suggestions-container">
+              <div className="relative mb-3 suggestions-container z-[9999]">  
 
                   <div
                     className="
@@ -714,26 +768,31 @@ useEffect(() => {
                     />
 
                   </div>
+{/* SUGGESTIONS DROPDOWN */}
+{showSuggestions && mode !== "airport" && suggestions.length > 0 && (
+  <div className="absolute z-[9999] w-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-200 max-h-60 overflow-y-auto pointer-events-auto">
+    {suggestions.map((s, idx) => (
+      <div
+        key={idx}
+        onClick={() => selectSuggestion(s)}
+        className="px-4 py-2 hover:bg-pink-50 cursor-pointer flex items-start gap-2 border-b border-gray-100 last:border-0"
+      >
+        <MapPin size={16} className="text-pink-500 mt-0.5 flex-shrink-0" />
 
-                  {/* SUGGESTIONS DROPDOWN */}
-                  {showSuggestions && mode !== "airport" && suggestions.length > 0 && (
-                    <div className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                      {suggestions.map((s, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => selectSuggestion(s)}
-                          className="px-4 py-2 hover:bg-pink-50 cursor-pointer flex items-start gap-2 border-b border-gray-100 last:border-0"
-                        >
-                          <MapPin size={16} className="text-pink-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{s.display_name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+        <span className="text-sm text-gray-700">
+          {s.properties.formatted}
+        </span>
 
-              {/* DATE */}
+      </div>
+    ))}
+  </div>
+)}
+
+</div>
+
+)}
+
+{/* DATE */}
               <div
                 className="
                   flex
@@ -769,6 +828,45 @@ useEffect(() => {
                 />
 
               </div>
+              {/* RETURN DATE */}
+{mode === "roundtrip" && (
+
+  <div
+    className="
+      flex
+      items-center
+      gap-3
+      h-12
+      px-4
+      rounded-2xl
+      bg-gray-100
+      mb-4
+    "
+  >
+
+    <CalendarDays
+      size={18}
+      className="text-blue-500"
+    />
+
+    <input
+      type="datetime-local"
+      value={returnTime}
+      onChange={(e) =>
+        setReturnTime(
+          e.target.value
+        )
+      }
+      className="
+        bg-transparent
+        w-full
+        outline-none
+        text-sm
+      "
+    />
+
+  </div>
+)}
 
               {/* DISTANCE & DURATION - NOW SHOWS FOR ONEWAY AND AIRPORT */}
               {distance > 0 && mode !== "rent" && (
@@ -804,15 +902,15 @@ useEffect(() => {
               >
 
                 {cars.map((car) => {
-
-                  const price =
-                    calculateFare(
-                      distance,
-                      mode,
-                      car as any,
-                      pkg
-                    );
-
+const price =
+  calculateFare(
+    distance,
+    mode,
+    car as any,
+    pkg,
+    rideTime,
+    returnTime
+  );
                   let seats = "4+1";
                   let bags = 1;
 

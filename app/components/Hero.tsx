@@ -94,9 +94,7 @@ const [pkg, setPkg] = useState<
   // =======================
 // USER LOCATION
 // =======================
-useEffect(() => {
-
-  const getUserLocation = async () => {
+const getUserLocation = async () => {
 
     if (!navigator.geolocation) {
 
@@ -124,62 +122,64 @@ useEffect(() => {
           lon,
         });
 
-        try {
+                try {
 
-        const res = await fetch(
+          const res = await fetch(
 
-  `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=69eca1b5532c483991038b8fa49f62d2`
+            `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=69eca1b5532c483991038b8fa49f62d2`
 
-);
+          );
 
-const data =
-  await res.json();
+          const data =
+            await res.json();
 
-if (
-  data.features &&
-  data.features.length > 0
-) {
+          if (
+            data.features &&
+            data.features.length > 0
+          ) {
 
-  setPickup(
+            setPickup(
 
-    data.features[0]
-      .properties
-      .formatted
-  );
+              data.features[0]
+                .properties
+                .formatted
+            );
 
-} else {
+          } else {
 
-  setPickup(
-    "Current Location"
-  );
-}
+            setPickup(
+              "Current Location"
+            );
+          }
 
-} catch {
+        } catch {
 
-  setPickup(
-    "Current Location"
-  );
-}
-},
+          setPickup(
+            "Current Location"
+          );
+        }
+      },
 
-(err) => {
+      (err) => {
 
-  console.log(err);
+        console.log(err);
 
-  setPickup(
-    "Enable location access"
-  );
-},
+        setPickup(
+          "Enable location access"
+        );
+      },
 
-{
-  enableHighAccuracy: true,
-  timeout: 10000,
-  maximumAge: 0,
-}
-);
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
 };
 
-  // DIRECT POPUP
+useEffect(() => {
+
+  // AUTO LOCATION
   getUserLocation();
 
   // DEFAULT TIME
@@ -201,6 +201,7 @@ if (
   setRideTime(formatted);
 
 }, []);
+
 
   // =======================
   // ROUTE API
@@ -694,6 +695,29 @@ const price =
                 />
 
               </div>
+
+              {/* ENABLE LOCATION BUTTON */}
+{pickup === "Enable location access" && (
+
+  <button
+    onClick={getUserLocation}
+    className="
+      w-full
+      h-11
+      rounded-2xl
+      mb-3
+      font-semibold
+      text-white
+      bg-gradient-to-r
+      from-blue-500
+      to-cyan-500
+    "
+  >
+
+    📍 Enable Live Location
+
+  </button>
+)}
 
               {/* RENT / ONEWAY / AIRPORT */}
               {mode === "rent" ? (

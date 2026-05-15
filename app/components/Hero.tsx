@@ -96,7 +96,7 @@ const [pkg, setPkg] = useState<
 // =======================
 useEffect(() => {
 
-  const getUserLocation = () => {
+  const getUserLocation = async () => {
 
     if (!navigator.geolocation) {
 
@@ -106,6 +106,34 @@ useEffect(() => {
 
       return;
     }
+
+    // LOCATION PERMISSION
+try {
+
+  const permission =
+    await navigator.permissions.query({
+      name: "geolocation",
+    });
+
+  if (
+    permission.state === "denied"
+  ) {
+
+    alert(
+      "Please enable location access for better cab booking experience."
+    );
+
+    setPickup(
+      "Enable location access"
+    );
+
+    return;
+  }
+
+} catch (err) {
+
+  console.log(err);
+}
 
     navigator.geolocation.getCurrentPosition(
 
@@ -774,7 +802,7 @@ const price =
     {suggestions.map((s, idx) => (
       <div
         key={idx}
-        onClick={() => selectSuggestion(s)}
+        onMouseDown={() => selectSuggestion(s)}
         className="px-4 py-2 hover:bg-pink-50 cursor-pointer flex items-start gap-2 border-b border-gray-100 last:border-0"
       >
         <MapPin size={16} className="text-pink-500 mt-0.5 flex-shrink-0" />

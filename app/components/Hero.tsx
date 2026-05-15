@@ -107,33 +107,7 @@ useEffect(() => {
       return;
     }
 
-    // LOCATION PERMISSION
-try {
-
-  const permission =
-    await navigator.permissions.query({
-      name: "geolocation",
-    });
-
-  if (
-    permission.state === "denied"
-  ) {
-
-    alert(
-      "Please enable location access for better cab booking experience."
-    );
-
-    setPickup(
-      "Enable location access"
-    );
-
-    return;
-  }
-
-} catch (err) {
-
-  console.log(err);
-}
+   
 
     navigator.geolocation.getCurrentPosition(
 

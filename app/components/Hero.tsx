@@ -202,7 +202,7 @@ useEffect(() => {
 
 }, []);
 
-
+  
   // =======================
   // ROUTE API
   // =======================
@@ -426,45 +426,58 @@ const price =
     const bookingTime =
       rideTime.split("T")[1];
 
-    router.push(
+router.push(
 
-      `/booking
+  `/booking
 
-      ?car=${encodeURIComponent(
-        selectedCar
-      )}
+  ?car=${encodeURIComponent(
+    selectedCar
+  )}
 
-      &mode=${encodeURIComponent(
-        mode
-      )}
+  &mode=${encodeURIComponent(
+    mode
+  )}
 
-      &price=${price}
+  &price=${price}
 
-      &pickup=${encodeURIComponent(
-        pickup
-      )}
+  &pickup=${encodeURIComponent(
+    pickup
+  )}
 
-      &drop=${encodeURIComponent(
-        drop || "N/A"
-      )}
+  &drop=${encodeURIComponent(
+    drop || "N/A"
+  )}
 
-      &distance=${distance}
+  &distance=${distance}
 
-      &duration=${encodeURIComponent(
-        duration || "N/A"
-      )}
+  &duration=${encodeURIComponent(
+    duration || "N/A"
+  )}
 
-      &bookingDate=${encodeURIComponent(
-        bookingDate
-      )}
+  &pkg=${encodeURIComponent(
+    pkg || "8hr/80km"
+  )}
 
-      &bookingTime=${encodeURIComponent(
-        bookingTime
-      )}`
+  &rideTime=${encodeURIComponent(
+    rideTime || ""
+  )}
 
-        .replace(/\s+/g, "")
-    );
-  };
+  &returnTime=${encodeURIComponent(
+    returnTime || ""
+  )}
+
+  &bookingDate=${encodeURIComponent(
+    bookingDate
+  )}
+
+  &bookingTime=${encodeURIComponent(
+    bookingTime
+  )}`
+
+    .replace(/\s+/g, "")
+);
+
+};
 
   // Close suggestions when clicking outside
   useEffect(() => {

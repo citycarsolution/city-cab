@@ -19,8 +19,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "City Cab Solution",
+
   description:
     "Premium cab booking service in Mumbai, Pune & Outstation rides.",
+
+  verification: {
+    google:
+      "google8f76aeea59caa5ae.html",
+  },
 };
 
 export default function RootLayout({
@@ -28,35 +34,23 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+
   return (
+
     <html
       lang="en"
-      className={`
-        ${geistSans.variable}
-        ${geistMono.variable}
-        h-full
-      `}
+      className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
+
       <head>
 
-        {/* ========================= */}
-        {/* GOOGLE SITE VERIFICATION */}
-        {/* ========================= */}
-
-        <meta
-          name="google-site-verification"
-          content="google8f76aeea59caa5ae"
-        />
-
-        {/* ========================= */}
-        {/* GOOGLE ADS TAG */}
-        {/* ========================= */}
-
+        {/* ✅ GOOGLE ADS TAG */}
         <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=AW-18120955506"
         />
 
+        {/* ✅ GOOGLE ADS CONFIG */}
         <Script id="google-ads">
           {`
             window.dataLayer = window.dataLayer || [];
@@ -78,35 +72,35 @@ export default function RootLayout({
 
       <body
         className="
-          min-h-screen
+          h-full
           bg-[#f5f5f7]
-          text-black
         "
       >
 
-        {/* ========================= */}
+        {/* ===================== */}
         {/* GLOBAL HEADER */}
-        {/* ========================= */}
+        {/* ===================== */}
 
         <Header />
 
-        {/* ========================= */}
+        {/* ===================== */}
         {/* PAGE CONTENT */}
-        {/* ========================= */}
+        {/* ===================== */}
 
-        <main className="pt-16 pb-20">
+        <main className="pt-16 pb-24">
 
           {children}
 
         </main>
 
-        {/* ========================= */}
+        {/* ===================== */}
         {/* GLOBAL FOOTER */}
-        {/* ========================= */}
+        {/* ===================== */}
 
         <Footer />
 
       </body>
+
     </html>
   );
 }

@@ -87,7 +87,7 @@ export default function RootLayout({
         {/* PAGE CONTENT */}
         {/* ===================== */}
 
-        <main className="pt-16 pb-24">
+        <main className="pt-0 pb-24">
 
           {children}
 

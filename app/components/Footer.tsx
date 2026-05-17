@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Home,
   Phone,
@@ -7,6 +6,7 @@ import {
   ShieldCheck,
   FileText,
   BadgeIndianRupee,
+  MessageCircle,
 } from "lucide-react";
 
 export default function Footer() {
@@ -302,75 +302,98 @@ export default function Footer() {
 
       </footer>
 
-      {/* ========================= */}
-      {/* MOBILE STICKY BAR */}
-      {/* ========================= */}
+     {/* ========================= */}
+{/* MOBILE STICKY BAR */}
+{/* ========================= */}
 
-      <div
-        className="
-          fixed
-          bottom-0
-          left-0
-          w-full
-          bg-white/95
-          backdrop-blur-xl
-          border-t
-          border-pink-100
-          flex
-          justify-around
-          items-center
-          py-3
-          z-50
-          md:hidden
-          shadow-[0_-4px_20px_rgba(0,0,0,0.08)]
-        "
-      >
+<div
+  className="
+    fixed
+    bottom-0
+    left-0
+    w-full
+    bg-white/95
+    backdrop-blur-xl
+    border-t
+    border-pink-100
+    flex
+    justify-around
+    items-center
+    py-3
+    z-50
+    md:hidden
+    shadow-[0_-4px_20px_rgba(0,0,0,0.08)]
+  "
+>
 
-        {/* HOME */}
-        <a
-          href="/"
-          className="
-            flex
-            flex-col
-            items-center
-            text-[11px]
-            font-semibold
-            text-gray-700
-          "
-        >
+  {/* HOME */}
+  <a
+    href="/"
+    className="
+      flex
+      flex-col
+      items-center
+      text-[11px]
+      font-semibold
+      text-gray-700
+    "
+  >
 
-          <Home
-            size={20}
-            className="mb-1"
-          />
+    <Home
+      size={20}
+      className="mb-1"
+    />
 
-          Home
+    Home
 
-        </a>
+  </a>
 
-        {/* CALL */}
-        <a
-          href="tel:9082552031"
-          className="
-            flex
-            flex-col
-            items-center
-            text-[11px]
-            font-bold
-            text-pink-500
-          "
-        >
+  {/* CALL */}
+  <a
+    href="tel:9082552031"
+    className="
+      flex
+      flex-col
+      items-center
+      text-[11px]
+      font-bold
+      text-pink-500
+    "
+  >
 
-          <Phone
-            size={20}
-            className="mb-1"
-          />
+    <Phone
+      size={20}
+      className="mb-1"
+    />
 
-          Call
+    Call
 
-        </a>
+  </a>
 
-      </div>
+  {/* WHATSAPP */}
+  <a
+    href="https://wa.me/919082552031"
+    target="_blank"
+    className="
+      flex
+      flex-col
+      items-center
+      text-[11px]
+      font-bold
+      text-green-600
+    "
+  >
+
+    <MessageCircle
+      size={20}
+      className="mb-1"
+    />
+
+    WhatsApp
+
+  </a>
+
+</div>
     </>
   );
 }
